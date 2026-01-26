@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThreeColumnLayout from "./components/ThreeColumnLayout";
 
 export const metadata: Metadata = {
   title: "Community",
@@ -14,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body className="antialiased">
-        {children}
+        <ThreeColumnLayout>
+          {children}
+        </ThreeColumnLayout>
       </body>
     </html>
   );

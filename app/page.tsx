@@ -1,14 +1,63 @@
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">
-          Welcome
-        </h1>
-        <p className="text-lg text-gray-600">
-          Next.js App Router + Tailwind CSS
-        </p>
+    <div className="min-h-screen">
+      {/* 頁面標題和過濾器 */}
+      <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10 p-4">
+        <div className="flex items-center justify-between">
+          <div className="h-6 bg-gray-800 rounded w-24"></div>
+          <div className="flex gap-2">
+            <div className="h-8 bg-gray-800 rounded-full w-20"></div>
+            <div className="h-8 bg-gray-800 rounded-full w-20"></div>
+          </div>
+        </div>
       </div>
-    </main>
+      
+      {/* 發布內容區域 */}
+      <div className="p-4 border-b border-gray-800">
+        <div className="flex gap-4">
+          <div className="w-12 h-12 bg-gray-700 rounded-full flex-shrink-0"></div>
+          <div className="flex-1 space-y-4">
+            <div className="h-20 bg-gray-800 rounded-lg"></div>
+            <div className="flex items-center justify-between">
+              <div className="flex gap-4">
+                <div className="w-6 h-6 bg-gray-800 rounded"></div>
+                <div className="w-6 h-6 bg-gray-800 rounded"></div>
+                <div className="w-6 h-6 bg-gray-800 rounded"></div>
+                <div className="w-6 h-6 bg-gray-800 rounded"></div>
+              </div>
+              <div className="h-9 bg-blue-500 rounded-full w-24"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* 內容流 */}
+      <div className="divide-y divide-gray-800">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="p-4 space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 bg-gray-700 rounded-full flex-shrink-0"></div>
+              <div className="flex-1 space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 bg-gray-800 rounded w-24"></div>
+                  <div className="h-3 bg-gray-800 rounded w-16"></div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 bg-gray-800 rounded"></div>
+                  <div className="h-4 bg-gray-800 rounded w-5/6"></div>
+                </div>
+                <div className="h-48 bg-gray-800 rounded-xl"></div>
+                <div className="flex items-center justify-between pt-2">
+                  <div className="w-5 h-5 bg-gray-800 rounded"></div>
+                  <div className="w-5 h-5 bg-gray-800 rounded"></div>
+                  <div className="w-5 h-5 bg-gray-800 rounded"></div>
+                  <div className="w-5 h-5 bg-gray-800 rounded"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
