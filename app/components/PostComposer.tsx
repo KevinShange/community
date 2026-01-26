@@ -1,4 +1,35 @@
+'use client';
+
+import { useState } from 'react';
+import { usePostStore } from '@/store/usePostStore';
+
 export default function PostComposer() {
+  const [content, setContent] = useState('');
+  const { addPost } = usePostStore();
+
+  /**
+   * 處理發文提交
+   */
+  const handleSubmitPost = () => {
+    // 檢查內容是否為空（去除空白後）
+    if (!content.trim()) {
+      return;
+    }
+
+    // 建立新貼文
+    addPost({
+      author: {
+        name: 'You',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
+        handle: '@you',
+      },
+      content: content.trim(),
+    });
+
+    // 清空輸入框
+    setContent('');
+  };
+
   return (
     <div className="px-4 pt-4 pb-5 border-b border-gray-800">
       <div className="flex gap-4">
@@ -9,6 +40,8 @@ export default function PostComposer() {
           {/* 輸入框 */}
           <div className="mb-4">
             <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
               placeholder="What's happening?"
               className="w-full bg-transparent text-gray-100 placeholder:text-gray-500 text-xl resize-none focus:outline-none min-h-[80px] leading-relaxed"
               rows={3}
@@ -51,7 +84,15 @@ export default function PostComposer() {
             </div>
             
             {/* Post 按鈕 */}
-            <button className="px-6 py-2 bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-bold rounded-full transition-all">
+            <button 
+              onClick={handleSubmitPost}
+              disabled={!content.trim()}
+              className={`px-6 py-2 font-bold rounded-full transition-all ${
+                content.trim()
+                  ? 'bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white cursor-pointer'
+                  : 'bg-blue-500/50 text-white/50 cursor-not-allowed'
+              }`}
+            >
               Post
             </button>
           </div>
