@@ -12,11 +12,34 @@ export default function TopNavigation({
   if (variant === 'post-detail') {
     return (
       <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
-        <div className="flex items-center gap-4 px-4 py-3">
+        <div className="flex items-center justify-between gap-4 px-4 py-3">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onBack}
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              aria-label="返回"
+            >
+              <svg
+                className="w-5 h-5 text-gray-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+            {title && (
+              <h1 className="text-xl font-bold text-gray-100">{title}</h1>
+            )}
+          </div>
           <button
-            onClick={onBack}
             className="p-2 hover:bg-gray-800 rounded-full transition-colors"
-            aria-label="返回"
+            aria-label="搜索"
           >
             <svg
               className="w-5 h-5 text-gray-100"
@@ -28,13 +51,10 @@ export default function TopNavigation({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={2}
-                d="M15 19l-7-7 7-7"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
             </svg>
           </button>
-          {title && (
-            <h1 className="text-xl font-bold text-gray-100">{title}</h1>
-          )}
         </div>
       </div>
     );
