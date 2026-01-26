@@ -44,14 +44,14 @@ export default function TopNavigation({
   return (
     <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="px-4">
-        <h1 className="text-xl font-bold text-gray-100 py-3">Home</h1>
+        <h1 className="text-xl font-bold text-gray-100 py-4">Home</h1>
         <div className="flex">
           <button className="flex-1 relative py-3 group">
-            <span className="font-bold text-gray-100">For You</span>
+            <span className="font-bold text-gray-100 text-[15px]">For You</span>
             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></span>
           </button>
           <button className="flex-1 py-3 group">
-            <span className="text-gray-500 group-hover:text-gray-300 transition-colors">
+            <span className="text-gray-500 group-hover:text-gray-300 transition-colors text-[15px]">
               Following
             </span>
           </button>
