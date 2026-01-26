@@ -2,6 +2,8 @@
 
 import TopNavigation from './components/TopNavigation';
 import PostComposer from './components/PostComposer';
+import CommentList from './components/CommentList';
+import CommentForm from './components/CommentForm';
 import { usePostStore } from '@/store/usePostStore';
 
 export default function Home() {
@@ -118,6 +120,12 @@ export default function Home() {
                     </div>
                   </button>
                 </div>
+                
+                {/* 留言列表 */}
+                <CommentList postId={post.id} comments={post.comments} />
+                
+                {/* 留言輸入框 */}
+                <CommentForm postId={post.id} />
               </div>
             </div>
           </article>
