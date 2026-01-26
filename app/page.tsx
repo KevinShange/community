@@ -1,16 +1,9 @@
+import TopNavigation from './components/TopNavigation';
+
 export default function Home() {
   return (
     <div className="min-h-screen">
-      {/* 頁面標題和過濾器 */}
-      <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10 p-4">
-        <div className="flex items-center justify-between">
-          <div className="h-6 bg-gray-800 rounded w-24"></div>
-          <div className="flex gap-2">
-            <div className="h-8 bg-gray-800 rounded-full w-20"></div>
-            <div className="h-8 bg-gray-800 rounded-full w-20"></div>
-          </div>
-        </div>
-      </div>
+      <TopNavigation variant="home" />
       
       {/* 發布內容區域 */}
       <div className="p-4 border-b border-gray-800">
