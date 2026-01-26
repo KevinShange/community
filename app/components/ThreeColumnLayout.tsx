@@ -170,7 +170,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
 
       {/* 右側輔助資訊欄 - 中等寬度，固定 */}
       <aside className="w-80 flex-shrink-0">
-        <div className="sticky top-0 h-screen overflow-y-auto">
+        <div className="sticky top-0 h-screen overflow-y-auto hide-scrollbar">
           <div className="p-4 space-y-5">
             {/* 搜索框 */}
             <div className="mb-2">
