@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import ThreeColumnLayout from "./components/ThreeColumnLayout";
 import { PostStoreProvider } from "@/store/usePostStore";
+import { UserStoreProvider } from "@/store/useUserStore";
 
 export const metadata: Metadata = {
   title: "Community",
@@ -16,11 +17,13 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body className="antialiased">
-        <PostStoreProvider>
-          <ThreeColumnLayout>
-            {children}
-          </ThreeColumnLayout>
-        </PostStoreProvider>
+        <UserStoreProvider>
+          <PostStoreProvider>
+            <ThreeColumnLayout>
+              {children}
+            </ThreeColumnLayout>
+          </PostStoreProvider>
+        </UserStoreProvider>
       </body>
     </html>
   );

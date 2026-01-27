@@ -1,10 +1,14 @@
+'use client';
+
 import { ReactNode } from 'react';
+import { useUserStore } from '@/store/useUserStore';
 
 interface ThreeColumnLayoutProps {
   children: ReactNode;
 }
 
 export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) {
+  const { currentUser } = useUserStore();
   return (
     <div className="flex min-h-screen bg-gray-950 text-gray-100">
       {/* 左側導航欄 - 最窄，固定寬度 */}
@@ -133,18 +137,14 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             {/* 用戶資訊 */}
             <div className="mt-auto pt-8">
               <div className="flex items-center gap-3 p-3 rounded-full hover:bg-gray-800 transition-colors cursor-pointer group">
-                <div className="w-10 h-10 bg-amber-700 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-6 h-6 text-amber-200"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                  </svg>
-                </div>
+                <img 
+                  src={currentUser.avatar} 
+                  alt={currentUser.name}
+                  className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+                />
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-100 truncate">Alex Rivera</div>
-                  <div className="text-sm text-gray-500 truncate">@arivera_design</div>
+                  <div className="font-semibold text-gray-100 truncate">{currentUser.name}</div>
+                  <div className="text-sm text-gray-500 truncate">{currentUser.handle}</div>
                 </div>
                 <button className="p-1 hover:bg-gray-700 rounded-full transition-colors">
                   <svg

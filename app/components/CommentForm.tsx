@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePostStore } from '@/store/usePostStore';
+import { useUserStore } from '@/store/useUserStore';
 
 interface CommentFormProps {
   postId: string | number;
@@ -10,6 +11,7 @@ interface CommentFormProps {
 export default function CommentForm({ postId }: CommentFormProps) {
   const [content, setContent] = useState('');
   const { addComment } = usePostStore();
+  const { currentUser } = useUserStore();
 
   /**
    * 處理留言提交
@@ -22,11 +24,7 @@ export default function CommentForm({ postId }: CommentFormProps) {
 
     // 建立新留言
     addComment(postId, {
-      author: {
-        name: 'You',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
-        handle: '@you',
-      },
+      author: currentUser,
       content: content.trim(),
       createdAt: new Date().toISOString(),
       likeCount: 0,
@@ -41,7 +39,11 @@ export default function CommentForm({ postId }: CommentFormProps) {
     <div className="mt-4 pt-4 border-t border-gray-800">
       <div className="flex gap-3">
         {/* 使用者頭像 */}
-        <div className="w-10 h-10 bg-orange-400 rounded-full flex-shrink-0"></div>
+        <img 
+          src={currentUser.avatar} 
+          alt={currentUser.name}
+          className="w-10 h-10 rounded-full flex-shrink-0 object-cover"
+        />
         
         <div className="flex-1">
           {/* 輸入框 */}

@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { usePostStore } from '@/store/usePostStore';
+import { useUserStore } from '@/store/useUserStore';
 
 export default function PostComposer() {
   const [content, setContent] = useState('');
   const { addPost } = usePostStore();
+  const { currentUser } = useUserStore();
 
   /**
    * 處理發文提交
@@ -18,11 +20,7 @@ export default function PostComposer() {
 
     // 建立新貼文
     addPost({
-      author: {
-        name: 'You',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
-        handle: '@you',
-      },
+      author: currentUser,
       content: content.trim(),
     });
 
@@ -34,7 +32,11 @@ export default function PostComposer() {
     <div className="px-4 pt-4 pb-5 border-b border-gray-800">
       <div className="flex gap-4">
         {/* 使用者頭像 */}
-        <div className="w-12 h-12 bg-orange-400 rounded-full flex-shrink-0"></div>
+        <img 
+          src={currentUser.avatar} 
+          alt={currentUser.name}
+          className="w-12 h-12 rounded-full flex-shrink-0 object-cover"
+        />
         
         <div className="flex-1">
           {/* 輸入框 */}
