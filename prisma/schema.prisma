@@ -1,0 +1,36 @@
+// Prisma schema - MongoDB
+// https://prisma.io/docs/orm/reference/prisma-schema-reference
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String?  @unique
+  avatar    String?
+  handle    String   @unique // 使用者代稱，如 @username
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts Post[]
+}
+
+model Post {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  authorId  String   @db.ObjectId
+  author    User     @relation(fields: [authorId], references: [id])
+  content   String
+  likeCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([createdAt])
+}
