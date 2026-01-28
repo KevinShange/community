@@ -13,6 +13,9 @@ export default function CommentForm({ postId }: CommentFormProps) {
   const { addComment } = usePostStore();
   const { currentUser } = useUserStore();
 
+  // 僅在登入後的主頁顯示，由 AuthGuard 保護
+  if (!currentUser) return null;
+
   /**
    * 處理留言提交
    */

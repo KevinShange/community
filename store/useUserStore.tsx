@@ -4,27 +4,23 @@ import { createContext, useContext, ReactNode, useState } from 'react';
 import type { Author } from '@/types/models';
 
 interface UserStoreContextType {
-  currentUser: Author;
-  setCurrentUser: (user: Author) => void;
+  currentUser: Author | null;
+  setCurrentUser: (user: Author | null) => void;
+  isLoggedIn: boolean;
 }
 
 const UserStoreContext = createContext<UserStoreContextType | undefined>(undefined);
 
-// 預設當前使用者資訊
-const defaultCurrentUser: Author = {
-  name: 'You',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=You',
-  handle: '@you',
-};
-
 export function UserStoreProvider({ children }: { children: ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<Author>(defaultCurrentUser);
+  const [currentUser, setCurrentUser] = useState<Author | null>(null);
+  const isLoggedIn = currentUser !== null;
 
   return (
     <UserStoreContext.Provider
       value={{
         currentUser,
         setCurrentUser,
+        isLoggedIn,
       }}
     >
       {children}

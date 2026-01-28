@@ -1,16 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/store/useUserStore';
 import type { Author } from '@/types/models';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setCurrentUser } = useUserStore();
+  const { setCurrentUser, isLoggedIn } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // 已登入時導向主頁
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.replace('/');
+    }
+  }, [isLoggedIn, router]);
+
+  if (isLoggedIn) {
+    return null; // 導向中不渲染
+  }
 
   // 固定回傳的 user object
   const mockUser: Author = {

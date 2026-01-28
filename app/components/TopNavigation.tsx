@@ -1,3 +1,7 @@
+'use client';
+
+import { useUserStore } from '@/store/useUserStore';
+
 interface TopNavigationProps {
   variant?: 'home' | 'post-detail';
   title?: string;
@@ -9,6 +13,8 @@ export default function TopNavigation({
   title,
   onBack 
 }: TopNavigationProps) {
+  const { currentUser } = useUserStore();
+
   if (variant === 'post-detail') {
     return (
       <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
@@ -60,11 +66,13 @@ export default function TopNavigation({
     );
   }
 
-  // Home variant with tabs
+  // Home variant with tabs，顯示目前使用者名稱
   return (
     <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="px-4">
-        <h1 className="text-xl font-bold text-gray-100 py-4">Home</h1>
+        <h1 className="text-xl font-bold text-gray-100 py-4">
+          {currentUser ? `${currentUser.name} 的動態` : 'Home'}
+        </h1>
         <div className="flex">
           <button className="flex-1 relative py-3 group">
             <span className="font-bold text-gray-100 text-[15px]">For You</span>

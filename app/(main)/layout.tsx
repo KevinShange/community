@@ -1,6 +1,11 @@
 import { ReactNode } from 'react';
 import ThreeColumnLayout from '../components/ThreeColumnLayout';
+import AuthGuard from '../components/AuthGuard';
 
 export default function MainLayout({ children }: { children: ReactNode }) {
-  return <ThreeColumnLayout>{children}</ThreeColumnLayout>;
+  return (
+    <AuthGuard>
+      <ThreeColumnLayout>{children}</ThreeColumnLayout>
+    </AuthGuard>
+  );
 }

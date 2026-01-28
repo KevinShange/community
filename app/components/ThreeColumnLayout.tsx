@@ -134,7 +134,8 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
               </button>
             </div>
             
-            {/* 用戶資訊 */}
+            {/* 用戶資訊（登入後由 AuthGuard 保護，此處一定有 currentUser） */}
+            {currentUser && (
             <div className="mt-auto pt-8">
               <div className="flex items-center gap-3 p-3 rounded-full hover:bg-gray-800 transition-colors cursor-pointer group">
                 <img 
@@ -157,6 +158,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                 </button>
               </div>
             </div>
+            )}
           </div>
         </div>
       </aside>

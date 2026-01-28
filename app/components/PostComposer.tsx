@@ -9,6 +9,9 @@ export default function PostComposer() {
   const { addPost } = usePostStore();
   const { currentUser } = useUserStore();
 
+  // 僅在登入後的主頁顯示，由 AuthGuard 保護
+  if (!currentUser) return null;
+
   /**
    * 處理發文提交
    */
