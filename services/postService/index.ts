@@ -12,3 +12,4 @@
  */
 export type { IPostService, PostId, AddPostPayload, AddCommentPayload, UpdatePostsFn } from './types';
 export { createLocalPostService } from './localPostService';
+export { createApiPostService } from './apiPostService';

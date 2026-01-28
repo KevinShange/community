@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
 import type { Post, Comment } from '@/types/models';
-import { createLocalPostService } from '@/services/postService';
+import { createApiPostService } from '@/services/postService';
+import { useUserStore } from '@/store/useUserStore';
 
 /** Store 對外介面（與原本一致，UI 不需改動） */
 interface PostStoreContextType {
@@ -17,18 +18,33 @@ const PostStoreContext = createContext<PostStoreContextType | undefined>(undefin
 
 export function PostStoreProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>([]);
+  const { currentUser } = useUserStore();
 
   useEffect(() => {
-    fetch('/api/posts')
+    // 依目前登入者帶入按讚狀態（x-user-handle）
+    const headers: HeadersInit = {};
+    if (currentUser?.handle) {
+      headers['x-user-handle'] = currentUser.handle;
+    }
+    fetch('/api/posts', { headers })
       .then((res) => res.json())
       .then((data: Post[]) => setPosts(data))
       .catch(() => setPosts([]));
-  }, []);
+  }, [currentUser?.handle]);
 
-  const postService = useMemo(
-    () => createLocalPostService((updater) => setPosts(updater)),
-    []
-  );
+  const postService = useMemo(() => {
+    // AuthGuard 已保證在主頁/發文區一定有 currentUser；但 Provider 會包住整個 app，
+    // 因此在未登入時提供 no-op，避免呼叫端意外炸掉。
+    if (!currentUser) {
+      return {
+        addPost: () => {},
+        addComment: () => {},
+        toggleLike: () => {},
+        toggleCommentLike: () => {},
+      };
+    }
+    return createApiPostService(currentUser, (updater) => setPosts(updater));
+  }, [currentUser]);
 
   return (
     <PostStoreContext.Provider

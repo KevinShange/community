@@ -21,6 +21,9 @@ model User {
 
   posts    Post[]
   comments Comment[]
+
+  postLikes    PostLike[]
+  commentLikes CommentLike[]
 }
 
 model Post {
@@ -33,6 +36,7 @@ model Post {
   updatedAt DateTime @updatedAt
 
   comments Comment[]
+  likes    PostLike[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -49,7 +53,35 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  likes CommentLike[]
+
   @@index([postId])
   @@index([authorId])
   @@index([createdAt])
+}
+
+model PostLike {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+  @@index([postId])
+}
+
+model CommentLike {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  commentId String   @db.ObjectId
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId])
+  @@index([userId])
+  @@index([commentId])
 }
