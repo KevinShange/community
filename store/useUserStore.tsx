@@ -1,10 +1,11 @@
 'use client';
 
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useState } from 'react';
 import type { Author } from '@/types/models';
 
 interface UserStoreContextType {
   currentUser: Author;
+  setCurrentUser: (user: Author) => void;
 }
 
 const UserStoreContext = createContext<UserStoreContextType | undefined>(undefined);
@@ -17,10 +18,13 @@ const defaultCurrentUser: Author = {
 };
 
 export function UserStoreProvider({ children }: { children: ReactNode }) {
+  const [currentUser, setCurrentUser] = useState<Author>(defaultCurrentUser);
+
   return (
     <UserStoreContext.Provider
       value={{
-        currentUser: defaultCurrentUser,
+        currentUser,
+        setCurrentUser,
       }}
     >
       {children}
