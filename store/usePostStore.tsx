@@ -1,8 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
 import type { Post, Comment } from '@/types/models';
-import { mockPosts } from '@/data/mockPosts';
 import { createLocalPostService } from '@/services/postService';
 
 /** Store 對外介面（與原本一致，UI 不需改動） */
@@ -17,7 +16,14 @@ interface PostStoreContextType {
 const PostStoreContext = createContext<PostStoreContextType | undefined>(undefined);
 
 export function PostStoreProvider({ children }: { children: ReactNode }) {
-  const [posts, setPosts] = useState<Post[]>(mockPosts);
+  const [posts, setPosts] = useState<Post[]>([]);
+
+  useEffect(() => {
+    fetch('/api/posts')
+      .then((res) => res.json())
+      .then((data: Post[]) => setPosts(data))
+      .catch(() => setPosts([]));
+  }, []);
 
   const postService = useMemo(
     () => createLocalPostService((updater) => setPosts(updater)),
