@@ -1,4 +1,4 @@
-import TopNavigation from '../components/TopNavigation';
+import TopNavigation from '../../components/TopNavigation';
 
 // 主贴文假资料
 const mainPost = {

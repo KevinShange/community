@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import ThreeColumnLayout from "./components/ThreeColumnLayout";
 import { PostStoreProvider } from "@/store/usePostStore";
 import { UserStoreProvider } from "@/store/useUserStore";
 
@@ -19,9 +18,7 @@ export default function RootLayout({
       <body className="antialiased">
         <UserStoreProvider>
           <PostStoreProvider>
-            <ThreeColumnLayout>
-              {children}
-            </ThreeColumnLayout>
+            {children}
           </PostStoreProvider>
         </UserStoreProvider>
       </body>

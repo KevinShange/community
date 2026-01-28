@@ -1,9 +1,9 @@
 'use client';
 
-import TopNavigation from './components/TopNavigation';
-import PostComposer from './components/PostComposer';
-import CommentList from './components/CommentList';
-import CommentForm from './components/CommentForm';
+import TopNavigation from '../components/TopNavigation';
+import PostComposer from '../components/PostComposer';
+import CommentList from '../components/CommentList';
+import CommentForm from '../components/CommentForm';
 import { usePostStore } from '@/store/usePostStore';
 
 export default function Home() {
