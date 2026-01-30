@@ -66,12 +66,18 @@ export default function TopNavigation({
     );
   }
 
-  // Home variant with tabs，顯示目前使用者名稱
+  // Home variant：email 登入顯示衍生名稱，OAuth 登入顯示名稱 (網址)
+  const displayTitle = currentUser
+    ? currentUser.loginType === 'oauth' && currentUser.handle?.startsWith('http')
+      ? `${currentUser.name} (${currentUser.handle}) 的動態`
+      : `${currentUser.name} 的動態`
+    : 'Home';
+
   return (
     <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="px-4">
-        <h1 className="text-xl font-bold text-gray-100 py-4">
-          {currentUser ? `${currentUser.name} 的動態` : 'Home'}
+        <h1 className="text-xl font-bold text-gray-100 py-4 truncate" title={displayTitle}>
+          {displayTitle}
         </h1>
         <div className="flex">
           <button className="flex-1 relative py-3 group">

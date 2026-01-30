@@ -23,33 +23,67 @@ export default function LoginPage() {
     return null; // 導向中不渲染
   }
 
-  // 固定回傳的 user object
-  const mockUser: Author = {
-    name: 'John Doe',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=JohnDoe',
-    handle: '@johndoe',
+  /** 從 email 衍生顯示名稱：取 @ 前、替換 . _ - 為空格、每字首大寫 */
+  const getDisplayNameFromEmail = (addr: string): string => {
+    const local = addr.split('@')[0] ?? addr;
+    const words = local.replace(/[._-]+/g, ' ').trim().split(/\s+/);
+    return words
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+      .join(' ')
+      .slice(0, 50) || local;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // 模擬 API 延遲
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // 固定回傳 user object，更新 store
-    setCurrentUser(mockUser);
-    console.log('Login successful:', mockUser);
+    const localPart = email.split('@')[0] ?? 'user';
+    const displayName = getDisplayNameFromEmail(email);
+    const emailUser: Author = {
+      name: displayName,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
+      handle: `@${localPart}`,
+      loginType: 'email',
+      email,
+    };
+    setCurrentUser(emailUser);
+    console.log('Login successful (email):', emailUser);
 
     setIsLoading(false);
-    
-    // 導航到首頁
     router.push('/');
   };
 
-  const handleSocialLogin = (provider: 'google' | 'facebook' | 'github') => {
-    // 社群登入按鈕不呼叫 API，只是視覺效果
-    console.log(`${provider} login clicked (no API call)`);
+  /** OAuth 登入：保留名稱與網址 (handle 為 profile URL) */
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'github') => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    const oauthUsers: Record<string, Author> = {
+      google: {
+        name: 'Google 使用者',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google',
+        handle: 'https://accounts.google.com/',
+        loginType: 'oauth',
+      },
+      facebook: {
+        name: 'Facebook 使用者',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=facebook',
+        handle: 'https://www.facebook.com/',
+        loginType: 'oauth',
+      },
+      github: {
+        name: 'GitHub 使用者',
+        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=github',
+        handle: 'https://github.com/',
+        loginType: 'oauth',
+      },
+    };
+    setCurrentUser(oauthUsers[provider]);
+    console.log(`${provider} login:`, oauthUsers[provider]);
+    setIsLoading(false);
+    router.push('/');
   };
 
   return (
