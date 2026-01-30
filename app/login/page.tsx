@@ -58,9 +58,21 @@ export default function LoginPage() {
     setIsLoading(false);
   };
 
-  /** OAuth 登入：目前為佔位，可於 auth.ts 加入 Google/GitHub 等 provider */
-  const handleSocialLogin = async (_provider: 'google' | 'facebook' | 'github') => {
-    setError('此登入方式尚未設定，請使用 Email 登入');
+  /** OAuth 登入：導向 NextAuth 對應 provider */
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'github') => {
+    setError(null);
+    try {
+      const res = await signIn(provider, { callbackUrl: '/', redirect: false });
+      if (res?.error) {
+        setError(res.error === 'Configuration' ? '此登入方式尚未設定，請使用 Email 登入' : '登入失敗，請再試一次');
+        return;
+      }
+      if (res?.url) {
+        window.location.href = res.url;
+      }
+    } catch {
+      setError('登入失敗，請再試一次');
+    }
   };
 
   return (

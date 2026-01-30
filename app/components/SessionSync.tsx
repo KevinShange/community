@@ -23,7 +23,7 @@ export default function SessionSync() {
       name: u.name ?? 'User',
       avatar: (u.image as string) ?? `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.id}`,
       handle: (u as { handle?: string }).handle ?? `@${(u.email ?? u.id).toString().split('@')[0]}`,
-      loginType: 'email',
+      loginType: (u as { loginType?: Author['loginType'] }).loginType ?? 'email',
       email: u.email ?? undefined,
     };
     setCurrentUser(author);
