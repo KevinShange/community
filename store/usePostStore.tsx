@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useMemo, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useMemo, useEffect, useCallback, ReactNode } from 'react';
 import type { Post, Comment } from '@/types/models';
 import { createApiPostService } from '@/services/postService';
 import { useUserStore } from '@/store/useUserStore';
@@ -20,8 +20,7 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>([]);
   const { currentUser } = useUserStore();
 
-  useEffect(() => {
-    // 依目前登入者帶入按讚狀態（x-user-handle）
+  const refetch = useCallback(() => {
     const headers: HeadersInit = {};
     if (currentUser?.handle) {
       headers['x-user-handle'] = currentUser.handle;
@@ -32,9 +31,11 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
       .catch(() => setPosts([]));
   }, [currentUser?.handle]);
 
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
   const postService = useMemo(() => {
-    // AuthGuard 已保證在主頁/發文區一定有 currentUser；但 Provider 會包住整個 app，
-    // 因此在未登入時提供 no-op，避免呼叫端意外炸掉。
     if (!currentUser) {
       return {
         addPost: () => {},
@@ -43,8 +44,8 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         toggleCommentLike: () => {},
       };
     }
-    return createApiPostService(currentUser, (updater) => setPosts(updater));
-  }, [currentUser]);
+    return createApiPostService(currentUser, (updater) => setPosts(updater), refetch);
+  }, [currentUser, refetch]);
 
   return (
     <PostStoreContext.Provider
