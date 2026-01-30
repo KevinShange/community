@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { PostStoreProvider } from "@/store/usePostStore";
-import { UserStoreProvider } from "@/store/useUserStore";
+import Providers from "./components/Providers";
 
 export const metadata: Metadata = {
   title: "Community",
@@ -16,11 +15,7 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body className="antialiased">
-        <UserStoreProvider>
-          <PostStoreProvider>
-            {children}
-          </PostStoreProvider>
-        </UserStoreProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

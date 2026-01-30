@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
-import type { Author } from '@/types/models';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setCurrentUser, isLoggedIn } = useUserStore();
+  const searchParams = useSearchParams();
+  const { isLoggedIn } = useUserStore();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // 已登入時導向主頁
   useEffect(() => {
@@ -19,71 +21,46 @@ export default function LoginPage() {
     }
   }, [isLoggedIn, router]);
 
+  // 顯示 NextAuth 回傳的錯誤（例如 CredentialsSignin）
+  useEffect(() => {
+    const err = searchParams.get('error');
+    if (err === 'CredentialsSignin') setError('Email 或密碼錯誤，請再試一次');
+    else if (err) setError('登入失敗，請再試一次');
+  }, [searchParams]);
+
   if (isLoggedIn) {
     return null; // 導向中不渲染
   }
 
-  /** 從 email 衍生顯示名稱：取 @ 前、替換 . _ - 為空格、每字首大寫 */
-  const getDisplayNameFromEmail = (addr: string): string => {
-    const local = addr.split('@')[0] ?? addr;
-    const words = local.replace(/[._-]+/g, ' ').trim().split(/\s+/);
-    return words
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-      .join(' ')
-      .slice(0, 50) || local;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const localPart = email.split('@')[0] ?? 'user';
-    const displayName = getDisplayNameFromEmail(email);
-    const emailUser: Author = {
-      name: displayName,
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(email)}`,
-      handle: `@${localPart}`,
-      loginType: 'email',
-      email,
-    };
-    setCurrentUser(emailUser);
-    console.log('Login successful (email):', emailUser);
-
+    try {
+      const res = await signIn('credentials', {
+        email: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+      });
+      if (res?.error) {
+        setError('Email 或密碼錯誤，請再試一次');
+        setIsLoading(false);
+        return;
+      }
+      if (res?.ok) {
+        router.push('/');
+        router.refresh();
+        return;
+      }
+    } catch {
+      setError('登入失敗，請再試一次');
+    }
     setIsLoading(false);
-    router.push('/');
   };
 
-  /** OAuth 登入：保留名稱與網址 (handle 為 profile URL) */
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'github') => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 400));
-
-    const oauthUsers: Record<string, Author> = {
-      google: {
-        name: 'Google 使用者',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=google',
-        handle: 'https://accounts.google.com/',
-        loginType: 'oauth',
-      },
-      facebook: {
-        name: 'Facebook 使用者',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=facebook',
-        handle: 'https://www.facebook.com/',
-        loginType: 'oauth',
-      },
-      github: {
-        name: 'GitHub 使用者',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=github',
-        handle: 'https://github.com/',
-        loginType: 'oauth',
-      },
-    };
-    setCurrentUser(oauthUsers[provider]);
-    console.log(`${provider} login:`, oauthUsers[provider]);
-    setIsLoading(false);
-    router.push('/');
+  /** OAuth 登入：目前為佔位，可於 auth.ts 加入 Google/GitHub 等 provider */
+  const handleSocialLogin = async (_provider: 'google' | 'facebook' | 'github') => {
+    setError('此登入方式尚未設定，請使用 Email 登入');
   };
 
   return (
@@ -182,6 +159,11 @@ export default function LoginPage() {
 
           {/* 傳統登入表單 */}
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm px-4 py-3">
+                {error}
+              </div>
+            )}
             {/* 電子郵件輸入 */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-white mb-2">

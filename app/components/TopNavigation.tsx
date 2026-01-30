@@ -1,5 +1,6 @@
 'use client';
 
+import { signOut } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
 
 interface TopNavigationProps {
@@ -76,9 +77,20 @@ export default function TopNavigation({
   return (
     <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="px-4">
-        <h1 className="text-xl font-bold text-gray-100 py-4 truncate" title={displayTitle}>
-          {displayTitle}
-        </h1>
+        <div className="flex items-center justify-between gap-2 py-4">
+          <h1 className="text-xl font-bold text-gray-100 truncate min-w-0" title={displayTitle}>
+            {displayTitle}
+          </h1>
+          {currentUser && (
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: '/login' })}
+              className="shrink-0 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+            >
+              登出
+            </button>
+          )}
+        </div>
         <div className="flex">
           <button className="flex-1 relative py-3 group">
             <span className="font-bold text-gray-100 text-[15px]">For You</span>
