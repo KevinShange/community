@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       );
     }
     const hashedPassword = await hash(password, 10);
-    const displayName = (typeof name === "string" && name.trim()) || trimmedEmail.split("@")[0] ?? "User";
+    const displayName = ((typeof name === "string" && name.trim()) || trimmedEmail.split("@")[0]) ?? "User";
     await prisma.user.create({
       data: {
         email: trimmedEmail,
