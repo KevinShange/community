@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import TopNavigation from './TopNavigation';
 import CommentList from './CommentList';
 import CommentForm from './CommentForm';
@@ -364,6 +365,11 @@ function ProfilePostCard({
 }) {
   const fakeRetweet = getFakeRetweetCount(post.id);
   const fakeViews = getFakeViewCount(post.id);
+  const router = useRouter();
+
+  const goToProfile = (handle: string) => {
+    router.push(`/profile/${encodeURIComponent(handle)}`);
+  };
 
   return (
     <article className="px-4 py-6 hover:bg-gray-950/50 transition-colors">
@@ -371,8 +377,20 @@ function ProfilePostCard({
         <img src={post.author.avatar} alt={post.author.name} className="w-12 h-12 rounded-full flex-shrink-0 object-cover" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <span className="font-bold text-gray-100 text-[15px]">{post.author.name}</span>
-            <span className="text-gray-500 text-[15px]">{post.author.handle}</span>
+            <button
+              type="button"
+              onClick={() => goToProfile(post.author.handle)}
+              className="font-bold text-gray-100 text-[15px] hover:underline text-left"
+            >
+              {post.author.name}
+            </button>
+            <button
+              type="button"
+              onClick={() => goToProfile(post.author.handle)}
+              className="text-gray-500 text-[15px] hover:underline hover:text-gray-300"
+            >
+              {post.author.handle}
+            </button>
             <span className="text-gray-500">·</span>
             <span className="text-gray-500 text-[15px]">{formatTime(post.createdAt)}</span>
             <div className="ml-auto">
