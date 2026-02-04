@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { usePostStore } from '@/store/usePostStore';
 import { useUserStore } from '@/store/useUserStore';
+import { getCountedLength, truncateToCounted, MAX_POST_LENGTH } from '@/lib/postUtils';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -57,7 +58,13 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
   if (!isOpen) return null;
   if (!currentUser) return null;
 
+  const counted = getCountedLength(content);
+  const canSubmit = content.trim().length > 0 && counted <= MAX_POST_LENGTH;
   const hasContent = content.trim().length > 0;
+
+  const handleContentChange = (value: string) => {
+    setContent(truncateToCounted(value, MAX_POST_LENGTH));
+  };
 
   const handleClose = () => {
     if (showDraftsView) {
@@ -100,7 +107,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
   };
 
   const handleSubmitPost = () => {
-    if (!content.trim()) return;
+    if (!content.trim() || counted > MAX_POST_LENGTH) return;
     addPost({
       author: currentUser,
       content: content.trim(),
@@ -247,7 +254,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                   <div className="mb-4">
                     <textarea
                       value={content}
-                      onChange={(e) => setContent(e.target.value)}
+                      onChange={(e) => handleContentChange(e.target.value)}
                       placeholder="What's happening?"
                       className="w-full bg-transparent text-gray-100 placeholder:text-gray-500 text-xl resize-none focus:outline-none min-h-[80px] leading-relaxed"
                       rows={3}
@@ -295,18 +302,25 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                         </svg>
                       </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleSubmitPost}
-                      disabled={!content.trim()}
-                      className={`px-6 py-2 font-bold rounded-full transition-all ${
-                        content.trim()
-                          ? 'bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white cursor-pointer'
-                          : 'bg-blue-500/50 text-white/50 cursor-not-allowed'
-                      }`}
-                    >
-                      Post
-                    </button>
+                    <div className="flex items-center gap-3 shrink-0">
+                      {content.trim().length > 0 && (
+                        <span className="text-gray-500 text-sm tabular-nums">
+                          {counted} / {MAX_POST_LENGTH}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={handleSubmitPost}
+                        disabled={!canSubmit}
+                        className={`px-6 py-2 font-bold rounded-full transition-all ${
+                          canSubmit
+                            ? 'bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white cursor-pointer'
+                            : 'bg-blue-500/50 text-white/50 cursor-not-allowed'
+                        }`}
+                      >
+                        Post
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

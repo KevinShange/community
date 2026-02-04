@@ -4,6 +4,7 @@ import TopNavigation from '../components/TopNavigation';
 import PostComposer from '../components/PostComposer';
 import CommentList from '../components/CommentList';
 import CommentForm from '../components/CommentForm';
+import ContentWithLinks from '../components/ContentWithLinks';
 import { usePostStore } from '@/store/usePostStore';
 
 export default function Home() {
@@ -66,7 +67,7 @@ export default function Home() {
                 {/* 內容 */}
                 <div className="mb-3">
                   <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                    {post.content}
+                    <ContentWithLinks content={post.content} />
                   </p>
                 </div>
                 

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import TopNavigation from '../../components/TopNavigation';
 import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
+import ContentWithLinks from '../../components/ContentWithLinks';
 import { useUserStore } from '@/store/useUserStore';
 import { usePostStore } from '@/store/usePostStore';
 import type { Post } from '@/types/models';
@@ -215,7 +216,7 @@ function ProfilePostCard({
             </div>
           </div>
           <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-3">
-            {post.content}
+            <ContentWithLinks content={post.content} />
           </p>
           <div className="flex items-center justify-between max-w-md mt-4">
             <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors">
