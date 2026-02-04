@@ -6,7 +6,7 @@ import GitHub from "next-auth/providers/github";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
-/** 為 OAuth 使用者產生唯一 handle，避免與既有用戶重複 */
+/** 為 OAuth 使用者產生唯一 handle：基底字 + 登入方式識別，避免與既有用戶重複 */
 async function getUniqueHandle(base: string): Promise<string> {
   const normalized = base.startsWith("@") ? base : `@${base}`;
   let handle = normalized.replace(/\s+/g, "").slice(0, 30);
@@ -18,7 +18,14 @@ async function getUniqueHandle(base: string): Promise<string> {
   return handle;
 }
 
-/** OAuth 登入時在 DB 建立或更新 User，回傳我們的 id 與 handle */
+/** 登入方式識別字（用於 handle 後綴） */
+const PROVIDER_SUFFIX: Record<string, string> = {
+  google: "google",
+  facebook: "facebook",
+  github: "github",
+};
+
+/** OAuth 登入時依 provider+providerAccountId 建立或更新 User，handle = 基底 + 登入方式，不同方式視為不同使用者 */
 async function getOrCreateOAuthUser(
   profile: { email?: string | null; name?: string | null; image?: string | null },
   account: { provider: string; providerAccountId: string }
@@ -26,35 +33,46 @@ async function getOrCreateOAuthUser(
   const name = profile.name ?? "User";
   const avatar = profile.image ?? null;
   const email = profile.email?.trim().toLowerCase() || null;
+  const providerSuffix = PROVIDER_SUFFIX[account.provider] ?? account.provider;
 
-  if (email) {
-    const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) {
-      await prisma.user.update({
-        where: { id: existing.id },
-        data: { name, avatar },
-      });
-      return { id: existing.id, handle: existing.handle };
-    }
-    const handle = await getUniqueHandle(email.split("@")[0]);
-    const user = await prisma.user.create({
-      data: { name, email, avatar, handle },
-    });
-    return { id: user.id, handle: user.handle };
-  }
-
-  const fallbackHandle = `@${account.provider}-${account.providerAccountId.slice(-10)}`;
-  const handle = await getUniqueHandle(fallbackHandle);
-  const existing = await prisma.user.findUnique({ where: { handle } });
-  if (existing) {
+  // 先依 OAuth 身份（provider + providerAccountId）查詢是否已存在
+  const existingAccount = await prisma.account.findUnique({
+    where: {
+      provider_providerAccountId: {
+        provider: account.provider,
+        providerAccountId: account.providerAccountId,
+      },
+    },
+    include: { user: true },
+  });
+  if (existingAccount) {
     await prisma.user.update({
-      where: { id: existing.id },
-      data: { name, avatar },
+      where: { id: existingAccount.userId },
+      data: { name, avatar, ...(email != null ? { email } : {}) },
     });
-    return { id: existing.id, handle: existing.handle };
+    return { id: existingAccount.userId, handle: existingAccount.user.handle };
   }
+
+  // 新 OAuth 使用者：handle = 基底字 + 登入方式識別（如 @johndoe-google）
+  const base =
+    email != null && email.length > 0
+      ? email.split("@")[0]
+      : (profile.name?.replace(/\s+/g, "") ?? account.providerAccountId.slice(-10));
+  const handle = await getUniqueHandle(`${base}-${providerSuffix}`);
+
   const user = await prisma.user.create({
-    data: { name, avatar, handle },
+    data: {
+      name,
+      email,
+      avatar,
+      handle,
+      accounts: {
+        create: {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        },
+      },
+    },
   });
   return { id: user.id, handle: user.handle };
 }
@@ -71,8 +89,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
         const email = String(credentials.email).trim().toLowerCase();
-        const user = await prisma.user.findUnique({
-          where: { email },
+        const user = await prisma.user.findFirst({
+          where: { email, password: { not: null } },
         });
         if (!user?.password) return null;
         const ok = await compare(String(credentials.password), user.password);

@@ -103,6 +103,7 @@ export default function ProfilePage() {
   const userPosts = currentUser
     ? posts.filter((p) => p.author.handle === currentUser.handle)
     : [];
+  const likedPosts = currentUser ? posts.filter((p) => p.isLikedByMe) : [];
   const postCount = userPosts.length;
 
   if (!currentUser) {
@@ -231,7 +232,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* 貼文列表（僅 Posts 標籤顯示） */}
+      {/* 貼文列表：Posts 為自己的貼文，Likes 為有點愛心的貼文 */}
       <div className="divide-y divide-gray-800">
         {activeTab === 'posts' &&
           userPosts.map((post) => (
@@ -247,7 +248,21 @@ export default function ProfilePage() {
             尚無貼文
           </div>
         )}
-        {activeTab !== 'posts' && (
+        {activeTab === 'likes' &&
+          likedPosts.map((post) => (
+            <ProfilePostCard
+              key={post.id}
+              post={post}
+              onToggleLike={() => toggleLike(post.id)}
+              formatTime={formatTime}
+            />
+          ))}
+        {activeTab === 'likes' && likedPosts.length === 0 && (
+          <div className="px-4 py-12 text-center text-gray-500 text-[15px]">
+            尚無喜歡的貼文
+          </div>
+        )}
+        {(activeTab === 'replies' || activeTab === 'highlights') && (
           <div className="px-4 py-12 text-center text-gray-500 text-[15px]">
             此標籤內容尚未實作
           </div>

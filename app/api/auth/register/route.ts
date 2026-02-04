@@ -18,10 +18,12 @@ export async function POST(req: Request) {
       );
     }
     const handle = `@${trimmedEmail.split("@")[0] ?? "user"}`;
-    const existing = await prisma.user.findFirst({
-      where: { OR: [{ email: trimmedEmail }, { handle }] },
+    // 衝突：已有同 email 的 credential 帳號，或 handle 已被使用（OAuth 會用 @xxx-google 等，不與此衝突）
+    const existingByEmail = await prisma.user.findFirst({
+      where: { email: trimmedEmail, password: { not: null } },
     });
-    if (existing) {
+    const existingByHandle = await prisma.user.findUnique({ where: { handle } });
+    if (existingByEmail || existingByHandle) {
       return NextResponse.json(
         { error: "此 email 或 handle 已被使用" },
         { status: 409 }
