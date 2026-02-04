@@ -11,14 +11,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  email     String?  @unique
-  password  String?  // 僅 credential 登入時使用，bcrypt 雜湊
-  avatar    String?
-  handle    String   @unique // 使用者代稱，如 @username
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  email       String?   @unique
+  password    String?   // 僅 credential 登入時使用，bcrypt 雜湊
+  avatar      String?
+  coverImage  String?   // 個人頁背景圖，預留後續實作
+  handle      String    @unique // 使用者代稱，如 @username
+  bio         String?   // 經歷／簡介
+  birthday    DateTime? // 生日
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   posts    Post[]
   comments Comment[]

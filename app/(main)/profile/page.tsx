@@ -1,21 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 import TopNavigation from '../../components/TopNavigation';
 import CommentList from '../../components/CommentList';
 import CommentForm from '../../components/CommentForm';
 import ContentWithLinks from '../../components/ContentWithLinks';
+import EditProfileModal from '../../components/EditProfileModal';
 import { useUserStore } from '@/store/useUserStore';
 import { usePostStore } from '@/store/usePostStore';
 import type { Post } from '@/types/models';
 
-// 假資料：個人簡介、地點、加入日期、追蹤數（未知項目）
-const FAKE_BIO = "Product Designer & Minimalist. Building the future of social web in dark mode. 🎉 Obsessed with pixels, typography, and dark interfaces.";
+// 假資料：地點、追蹤數（未知項目）
 const FAKE_LOCATION = "San Francisco, CA";
-const FAKE_JOINED = "Joined October 2021";
 const FAKE_FOLLOWING = 1240;
 const FAKE_FOLLOWERS = 850;
+
+interface ProfileData {
+  name: string;
+  bio: string;
+  birthday: string | null;
+  coverImage: string | null;
+  joinedAt: string;
+}
+
+function getProfileHeaders(handle: string): HeadersInit {
+  return { 'x-user-handle': handle };
+}
+
+function formatJoinedAt(iso: string): string {
+  const d = new Date(iso);
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  return `Joined ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function formatBirthdayDisplay(dateStr: string | null): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+}
 
 // 貼文假資料：轉發數、瀏覽量（用於 Profile 卡片顯示）
 function getFakeRetweetCount(_postId: string | number) {
@@ -38,9 +61,44 @@ function formatTime(dateString: string | Date) {
 type ProfileTab = 'posts' | 'replies' | 'highlights' | 'likes';
 
 export default function ProfilePage() {
-  const { currentUser } = useUserStore();
+  const { currentUser, setCurrentUser } = useUserStore();
   const { posts, toggleLike } = usePostStore();
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  const fetchProfile = useCallback(async () => {
+    if (!currentUser?.handle) {
+      setProfileData(null);
+      setProfileLoading(false);
+      return;
+    }
+    setProfileLoading(true);
+    try {
+      const res = await fetch('/api/profile', { headers: getProfileHeaders(currentUser.handle) });
+      if (res.ok) {
+        const data = await res.json();
+        setProfileData({
+          name: data.name ?? currentUser.name,
+          bio: data.bio ?? '',
+          birthday: data.birthday ?? null,
+          coverImage: data.coverImage ?? null,
+          joinedAt: data.joinedAt ?? new Date().toISOString(),
+        });
+      } else {
+        setProfileData(null);
+      }
+    } catch {
+      setProfileData(null);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [currentUser?.handle, currentUser?.name]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const userPosts = currentUser
     ? posts.filter((p) => p.author.handle === currentUser.handle)
@@ -70,12 +128,14 @@ export default function ProfilePage() {
         subtitle={`${postCount} Posts`}
       />
 
-      {/* 封面與頭像 */}
+      {/* 封面與頭像（背景圖預留：之後可從 profileData.coverImage 實作上傳） */}
       <div className="relative">
         <div
           className="h-48 w-full bg-gray-800 bg-cover bg-center"
           style={{
-            backgroundImage: `url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80)`,
+            backgroundImage: profileData?.coverImage
+              ? `url(${profileData.coverImage})`
+              : `url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80)`,
           }}
         />
         <div className="absolute -bottom-16 left-4">
@@ -86,16 +146,22 @@ export default function ProfilePage() {
           />
         </div>
         <div className="absolute top-4 right-4">
-          <button className="px-4 py-2 rounded-full border border-gray-600 text-gray-100 font-bold text-[15px] hover:bg-gray-800 transition-colors">
+          <button
+            type="button"
+            onClick={() => setShowEditModal(true)}
+            className="px-4 py-2 rounded-full border border-gray-600 text-gray-100 font-bold text-[15px] hover:bg-gray-800 transition-colors"
+          >
             Edit profile
           </button>
         </div>
       </div>
 
-      {/* 使用者資訊區（預留封面頭像高度） */}
+      {/* 使用者資訊區（預留封面頭像高度）；名稱／經歷／生日來自資料庫 */}
       <div className="pt-20 px-4 pb-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-gray-100">{currentUser.name}</h2>
+          <h2 className="text-xl font-bold text-gray-100">
+            {profileLoading ? currentUser.name : (profileData?.name ?? currentUser.name)}
+          </h2>
           <svg
             className="w-5 h-5 text-blue-500 flex-shrink-0"
             fill="currentColor"
@@ -106,7 +172,7 @@ export default function ProfilePage() {
         </div>
         <p className="text-gray-500 text-[15px] mt-0.5">{currentUser.handle}</p>
         <p className="text-gray-100 text-[15px] mt-3 whitespace-pre-wrap leading-relaxed">
-          {FAKE_BIO}
+          {profileLoading ? '…' : (profileData?.bio ?? '')}
         </p>
         <div className="flex flex-wrap items-center gap-3 mt-3 text-gray-500 text-[15px]">
           <span className="flex items-center gap-1.5">
@@ -116,12 +182,22 @@ export default function ProfilePage() {
             </svg>
             {FAKE_LOCATION}
           </span>
-          <span className="flex items-center gap-1.5">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            {FAKE_JOINED}
-          </span>
+          {profileData?.joinedAt && (
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {formatJoinedAt(profileData.joinedAt)}
+            </span>
+          )}
+          {profileData?.birthday && (
+            <span className="flex items-center gap-1.5">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              {formatBirthdayDisplay(profileData.birthday)}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-4 mt-3">
           <span className="text-gray-100 text-[15px]">
@@ -177,6 +253,36 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        initialValues={{
+          name: profileData?.name ?? currentUser.name,
+          bio: profileData?.bio ?? '',
+          birthday: profileData?.birthday ?? '',
+        }}
+        userHandle={currentUser.handle}
+        onSuccess={(updated) => {
+          setProfileData((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  name: updated.name,
+                  bio: updated.bio,
+                  birthday: updated.birthday,
+                }
+              : {
+                  name: updated.name,
+                  bio: updated.bio,
+                  birthday: updated.birthday,
+                  coverImage: null,
+                  joinedAt: new Date().toISOString(),
+                }
+          );
+          setCurrentUser({ ...currentUser, name: updated.name });
+        }}
+      />
     </div>
   );
 }
