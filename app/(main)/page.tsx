@@ -6,9 +6,11 @@ import CommentList from '../components/CommentList';
 import CommentForm from '../components/CommentForm';
 import ContentWithLinks from '../components/ContentWithLinks';
 import { usePostStore } from '@/store/usePostStore';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { posts, toggleLike } = usePostStore();
+  const router = useRouter();
 
   // 格式化時間顯示
   const formatTime = (dateString: string | Date) => {
@@ -52,7 +54,13 @@ export default function Home() {
                 {/* 使用者資訊 */}
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-bold text-gray-100 text-[15px]">{post.author.name}</span>
-                  <span className="text-gray-500 text-[15px]">{post.author.handle}</span>
+                  <button
+                    type="button"
+                    onClick={() => router.push(`/profile/${encodeURIComponent(post.author.handle)}`)}
+                    className="text-gray-500 text-[15px] hover:underline hover:text-gray-300"
+                  >
+                    {post.author.handle}
+                  </button>
                   <span className="text-gray-500 text-[15px]">·</span>
                   <span className="text-gray-500 text-[15px]">{formatTime(post.createdAt)}</span>
                   <div className="ml-auto">
