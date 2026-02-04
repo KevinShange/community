@@ -1,9 +1,9 @@
 'use client';
 
 import { Suspense } from 'react';
-import LoginForm from './LoginForm';
+import RegisterForm from './RegisterForm';
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <Suspense
       fallback={
@@ -14,7 +14,7 @@ export default function LoginPage() {
         </div>
       }
     >
-      <LoginForm />
+      <RegisterForm />
     </Suspense>
   );
 }

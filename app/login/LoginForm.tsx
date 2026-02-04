@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
 
@@ -234,16 +235,12 @@ export default function LoginForm() {
           <div className="mt-6 text-center">
             <span className="text-gray-400 text-sm">
               Don't have an account?{' '}
-              <a
-                href="#"
+              <Link
+                href="/register"
                 className="text-blue-500 hover:text-blue-400 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  console.log('Sign up clicked');
-                }}
               >
                 Sign up
-              </a>
+              </Link>
             </span>
           </div>
         </div>
