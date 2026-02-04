@@ -165,16 +165,22 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
   const displayName =
     profileData?.name ??
     firstAuthor?.name ??
-    (isSelfProfile ? loggedInUser.name : effectiveHandle || loggedInUser.name);
+    (isSelfProfile ? loggedInUser.name : effectiveHandle || loggedInUser.name) ??
+    effectiveHandle ??
+    'User';
 
-  const displayHandle = effectiveHandle || firstAuthor?.handle || loggedInUser.handle;
+  const displayHandle =
+    effectiveHandle || firstAuthor?.handle || loggedInUser.handle || '';
 
   const displayAvatar =
-    profileData?.avatar ?? firstAuthor?.avatar ?? (isSelfProfile ? loggedInUser.avatar : loggedInUser.avatar);
+    profileData?.avatar ??
+    firstAuthor?.avatar ??
+    (isSelfProfile ? loggedInUser.avatar : loggedInUser.avatar) ??
+    '';
 
   return (
     <div className="min-h-screen">
-      <TopNavigation variant="profile" title={displayName} subtitle={`${postCount} Posts`} />
+      <TopNavigation variant="profile" title={String(displayName)} subtitle={`${postCount} Posts`} />
 
       {/* 封面與頭像 */}
       <div className="relative">
@@ -188,8 +194,8 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
         />
         <div className="absolute -bottom-16 left-4">
           <img
-            src={displayAvatar}
-            alt={displayName}
+            src={displayAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
+            alt={String(displayName)}
             className="w-32 h-32 rounded-full border-4 border-gray-950 object-cover"
           />
         </div>
@@ -217,13 +223,13 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
       <div className="pt-20 px-4 pb-4">
         <div className="flex items-center gap-2">
           <h2 className="text-xl font-bold text-gray-100">
-            {profileLoading ? displayName : profileData?.name ?? displayName}
+            {String(profileLoading ? displayName : profileData?.name ?? displayName)}
           </h2>
           <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
             <path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-4-4-4-.47 0-.92.08-1.34.23C14.2 2.92 13.36 2 12 2s-2.2.92-2.66 2.23c-.42-.15-.87-.23-1.34-.23-2.21 0-4 1.79-4 4 0 .495.084.965.238 1.4-1.272.65-2.147 2.02-2.147 3.6 0 1.495.782 2.798 1.942 3.486-.02.17-.032.34-.032.514 0 2.21 1.708 4 4 4 .21 0 .41-.03.61-.08-.32.62-.73 1.19-1.17 1.72-.94 1.07-2.12 1.9-3.44 2.44-1.32.54-2.72.84-4.16.84-1.44 0-2.84-.3-4.16-.84-1.32-.54-2.5-1.37-3.44-2.44-.44-.53-.85-1.1-1.17-1.72-.2.05-.4.08-.61.08-2.21 0-4-1.79-4-4 0-.174.012-.344.032-.514C2.782 15.298 2 13.995 2 12.5c0-1.58.875-2.95 2.148-3.6-.154-.435-.238-.905-.238-1.4 0-2.21 1.71-4 4-4 .47 0 .92.08 1.34.23C7.8 2.92 8.64 2 10 2s2.2.92 2.66 2.23c.42-.15.87-.23 1.34-.23 2.21 0 4 1.79 4 4 0 .495-.084.965-.238 1.4 1.272.65 2.147 2.02 2.147 3.6 0 1.495-.782 2.798-1.942 3.486.02.17.032.34.032.514 0 2.21-1.708 4-4 4-.21 0-.41-.03-.61-.08.32.62.73 1.19 1.17 1.72.94 1.07 2.12 1.9 3.44 2.44 1.32.54 2.72.84 4.16.84 1.44 0 2.84-.3 4.16-.84 1.32-.54 2.5-1.37 3.44-2.44.44-.53.85-1.1 1.17-1.72.2.05.4.08.61.08 2.21 0 4-1.79 4-4 0-.174-.012-.344-.032-.514 1.16-.688 1.942-1.991 1.942-3.486z" />
           </svg>
         </div>
-        <p className="text-gray-500 text-[15px] mt-0.5">{displayHandle}</p>
+        <p className="text-gray-500 text-[15px] mt-0.5">{displayHandle || effectiveHandle || '—'}</p>
         <p className="text-gray-100 text-[15px] mt-3 whitespace-pre-wrap leading-relaxed">
           {profileLoading ? '…' : profileData?.bio ?? ''}
         </p>

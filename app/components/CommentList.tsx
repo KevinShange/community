@@ -1,6 +1,7 @@
 'use client';
 
 import type { Comment } from '@/types/models';
+import { useRouter } from 'next/navigation';
 import { usePostStore } from '@/store/usePostStore';
 
 interface CommentListProps {
@@ -9,7 +10,12 @@ interface CommentListProps {
 }
 
 export default function CommentList({ postId, comments }: CommentListProps) {
+  const router = useRouter();
   const { toggleCommentLike } = usePostStore();
+
+  const goToProfile = (handle: string) => {
+    router.push(`/profile/${encodeURIComponent(handle)}`);
+  };
 
   // 格式化時間顯示
   const formatTime = (dateString: string | Date) => {
@@ -47,10 +53,22 @@ export default function CommentList({ postId, comments }: CommentListProps) {
           />
           
           <div className="flex-1 min-w-0">
-            {/* 使用者資訊 */}
+            {/* 使用者資訊：名稱與 handle 可點擊前往該使用者 Profile */}
             <div className="flex items-center gap-2 mb-1">
-              <span className="font-bold text-gray-100 text-[15px]">{comment.author.name}</span>
-              <span className="text-gray-500 text-[15px]">{comment.author.handle}</span>
+              <button
+                type="button"
+                onClick={() => goToProfile(comment.author.handle)}
+                className="font-bold text-gray-100 text-[15px] hover:underline text-left"
+              >
+                {comment.author.name}
+              </button>
+              <button
+                type="button"
+                onClick={() => goToProfile(comment.author.handle)}
+                className="text-gray-500 text-[15px] hover:underline hover:text-gray-300"
+              >
+                {comment.author.handle}
+              </button>
               <span className="text-gray-500 text-[15px]">·</span>
               <span className="text-gray-500 text-[15px]">{formatTime(comment.createdAt)}</span>
             </div>
