@@ -30,6 +30,10 @@ model User {
 
   postLikes    PostLike[]
   commentLikes CommentLike[]
+
+  // 追蹤關係
+  following Follow[] @relation("UserFollowing")
+  followers Follow[] @relation("UserFollowers")
 }
 
 model Account {
@@ -114,4 +118,17 @@ model Draft {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model Follow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String   @db.ObjectId
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String   @db.ObjectId
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

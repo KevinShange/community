@@ -11,10 +11,8 @@ import { useUserStore } from '@/store/useUserStore';
 import { usePostStore } from '@/store/usePostStore';
 import type { Post } from '@/types/models';
 
-// 假資料：地點、追蹤數（未知項目）
+// 假資料：地點（追蹤數改為實際資料）
 const FAKE_LOCATION = 'San Francisco, CA';
-const FAKE_FOLLOWING = 1240;
-const FAKE_FOLLOWERS = 850;
 
 interface ProfileData {
   name: string;
@@ -23,10 +21,19 @@ interface ProfileData {
   coverImage: string | null;
   joinedAt: string;
   avatar: string | null;
+  followingCount: number;
+  followersCount: number;
+  /** 目前登入者是否已追蹤此使用者（僅在查看他人 Profile 時有意義） */
+  isFollowing: boolean;
 }
 
-function getProfileHeaders(handle: string): HeadersInit {
-  return { 'x-user-handle': handle };
+function getProfileHeaders(handle: string, viewerHandle?: string | null): HeadersInit {
+  const h: HeadersInit = { 'x-user-handle': handle };
+  if (viewerHandle) {
+    // 額外告訴後端目前查看者是誰，用於判斷是否已追蹤
+    (h as Record<string, string>)['x-viewer-handle'] = viewerHandle;
+  }
+  return h;
 }
 
 function formatJoinedAt(iso: string): string {
@@ -90,6 +97,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
   const [showEditModal, setShowEditModal] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [followLoading, setFollowLoading] = useState(false);
 
   // 目前正在查看的 handle（若未指定則為登入者）
   const effectiveHandle = viewedHandle ?? loggedInUser?.handle ?? '';
@@ -103,7 +111,9 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
     }
     setProfileLoading(true);
     try {
-      const res = await fetch('/api/profile', { headers: getProfileHeaders(effectiveHandle) });
+      const res = await fetch('/api/profile', {
+        headers: getProfileHeaders(effectiveHandle, loggedInUser?.handle ?? null),
+      });
       if (res.ok) {
         const data = await res.json();
         setProfileData({
@@ -113,6 +123,9 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
           coverImage: data.coverImage ?? null,
           joinedAt: data.joinedAt ?? new Date().toISOString(),
           avatar: data.avatar ?? null,
+          followingCount: typeof data.followingCount === 'number' ? data.followingCount : 0,
+          followersCount: typeof data.followersCount === 'number' ? data.followersCount : 0,
+          isFollowing: Boolean(data.isFollowing),
         });
       } else {
         setProfileData(null);
@@ -122,7 +135,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
     } finally {
       setProfileLoading(false);
     }
-  }, [effectiveHandle, isSelfProfile, loggedInUser?.name]);
+  }, [effectiveHandle, isSelfProfile, loggedInUser?.handle, loggedInUser?.name]);
 
   useEffect(() => {
     fetchProfile();
@@ -179,6 +192,50 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
     (isSelfProfile ? loggedInUser.avatar : loggedInUser.avatar) ??
     '';
 
+  const displayFollowingCount =
+    typeof profileData?.followingCount === 'number' ? profileData.followingCount : 0;
+  const displayFollowersCount =
+    typeof profileData?.followersCount === 'number' ? profileData.followersCount : 0;
+
+  const isFollowing = !isSelfProfile && profileData ? profileData.isFollowing : false;
+
+  const handleToggleFollow = async () => {
+    if (isSelfProfile || !loggedInUser || !effectiveHandle || followLoading) return;
+    try {
+      setFollowLoading(true);
+      const res = await fetch('/api/profile/follow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          viewer: {
+            name: loggedInUser.name,
+            avatar: loggedInUser.avatar,
+            handle: loggedInUser.handle,
+          },
+          targetHandle: effectiveHandle,
+        }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setProfileData((prev) =>
+        prev
+          ? {
+              ...prev,
+              isFollowing: Boolean(data.isFollowing),
+              followingCount:
+                typeof data.followingCount === 'number' ? data.followingCount : prev.followingCount,
+              followersCount:
+                typeof data.followersCount === 'number' ? data.followersCount : prev.followersCount,
+            }
+          : prev,
+      );
+    } finally {
+      setFollowLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <TopNavigation variant="profile" title={String(displayName)} subtitle={`${postCount} Posts`} />
@@ -212,9 +269,11 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
           ) : (
             <button
               type="button"
-              className="px-4 py-2 rounded-full bg-gray-100 text-gray-900 font-bold text-[15px] hover:bg-gray-200 transition-colors"
+              onClick={handleToggleFollow}
+              disabled={followLoading}
+              className="px-4 py-2 rounded-full bg-gray-100 text-gray-900 font-bold text-[15px] hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
-              Follow
+              {isFollowing ? '已 follow' : '尚未 follow'}
             </button>
           )}
         </div>
@@ -261,11 +320,11 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
         </div>
         <div className="flex items-center gap-4 mt-3">
           <span className="text-gray-100 text-[15px]">
-            <strong className="text-gray-100">{FAKE_FOLLOWING.toLocaleString()}</strong>
+            <strong className="text-gray-100">{displayFollowingCount.toLocaleString()}</strong>
             <span className="text-gray-500 ml-1">Following</span>
           </span>
           <span className="text-gray-100 text-[15px]">
-            <strong className="text-gray-100">{FAKE_FOLLOWERS.toLocaleString()}</strong>
+            <strong className="text-gray-100">{displayFollowersCount.toLocaleString()}</strong>
             <span className="text-gray-500 ml-1">Followers</span>
           </span>
         </div>

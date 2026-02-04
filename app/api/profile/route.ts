@@ -10,6 +10,7 @@ export async function GET() {
   try {
     const h = await headers();
     const userHandle = h.get('x-user-handle');
+    const viewerHandle = h.get('x-viewer-handle');
     if (!userHandle) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -17,6 +18,7 @@ export async function GET() {
     const user = await prisma.user.findUnique({
       where: { handle: userHandle },
       select: {
+        id: true,
         name: true,
         avatar: true,
         coverImage: true,
@@ -31,6 +33,33 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // 計算追蹤數與粉絲數
+    const [followingCount, followersCount] = await Promise.all([
+      prisma.follow.count({ where: { followerId: user.id } }),
+      prisma.follow.count({ where: { followingId: user.id } }),
+    ]);
+
+    // 判斷目前查看者是否已追蹤此使用者
+    let isFollowing = false;
+    if (viewerHandle) {
+      const viewer = await prisma.user.findUnique({
+        where: { handle: viewerHandle },
+        select: { id: true },
+      });
+      if (viewer && viewer.id !== user.id) {
+        const existing = await prisma.follow.findUnique({
+          where: {
+            followerId_followingId: {
+              followerId: viewer.id,
+              followingId: user.id,
+            },
+          },
+          select: { id: true },
+        });
+        isFollowing = !!existing;
+      }
+    }
+
     return NextResponse.json({
       name: user.name,
       avatar: user.avatar,
@@ -39,6 +68,9 @@ export async function GET() {
       bio: user.bio ?? '',
       birthday: user.birthday ? user.birthday.toISOString().slice(0, 10) : null,
       joinedAt: user.createdAt.toISOString(),
+      followingCount,
+      followersCount,
+      isFollowing,
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
