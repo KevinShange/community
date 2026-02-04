@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useUserStore } from '@/store/useUserStore';
 
@@ -33,9 +34,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
               </div>
             </div>
             
-            {/* 導航連結 */}
+            {/* 導航連結：使用 Link 做客戶端導航，避免整頁重載導致 store 重置 */}
             <nav className="space-y-1 mb-6">
-              <a
+              <Link
                 href="/"
                 className={`flex items-center gap-4 px-4 py-3 rounded-full transition-colors group relative ${pathname === '/' ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
               >
@@ -47,9 +48,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                 </svg>
                 <span className={`font-bold text-xl ${pathname === '/' ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}>Home</span>
-              </a>
+              </Link>
               
-              <a
+              <Link
                 href="/explore"
                 className="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-gray-800 transition-colors group"
               >
@@ -67,9 +68,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   />
                 </svg>
                 <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl">Explore</span>
-              </a>
+              </Link>
               
-              <a
+              <Link
                 href="/notifications"
                 className="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-gray-800 transition-colors group"
               >
@@ -87,9 +88,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   />
                 </svg>
                 <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl">Notifications</span>
-              </a>
+              </Link>
               
-              <a
+              <Link
                 href="/messages"
                 className="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-gray-800 transition-colors group"
               >
@@ -107,9 +108,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   />
                 </svg>
                 <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl">Messages</span>
-              </a>
+              </Link>
               
-              <a
+              <Link
                 href="/profile"
                 className={`flex items-center gap-4 px-4 py-3 rounded-full transition-colors group ${isProfile ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
               >
@@ -127,7 +128,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   />
                 </svg>
                 <span className={`font-bold text-xl transition-colors ${isProfile ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}>Profile</span>
-              </a>
+              </Link>
             </nav>
             
             {/* Post 按鈕 */}
