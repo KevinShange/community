@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
+import PostModal from '@/app/components/PostModal';
 
 interface ThreeColumnLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const { currentUser } = useUserStore();
   const isProfile = pathname === '/profile';
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [postModalOpen, setPostModalOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -148,7 +150,11 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             
             {/* Post 按鈕 */}
             <div className="mb-6">
-              <button className="w-full h-12 bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-bold rounded-full transition-all">
+              <button
+                type="button"
+                onClick={() => setPostModalOpen(true)}
+                className="w-full h-12 bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-bold rounded-full transition-all"
+              >
                 Post
               </button>
             </div>
@@ -215,6 +221,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
           </div>
         </div>
       </aside>
+
+      {/* Post 發文彈出視窗 */}
+      <PostModal isOpen={postModalOpen} onClose={() => setPostModalOpen(false)} />
 
       {/* 中央內容區 - 最寬，可滾動 */}
       <main className="flex-1 min-w-0 border-r border-gray-800">
