@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 import { useUserStore } from '@/store/useUserStore';
 
 interface ThreeColumnLayoutProps {
@@ -8,7 +9,9 @@ interface ThreeColumnLayoutProps {
 }
 
 export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) {
+  const pathname = usePathname();
   const { currentUser } = useUserStore();
+  const isProfile = pathname === '/profile';
   return (
     <div className="flex min-h-screen bg-gray-950 text-gray-100">
       {/* 左側導航欄 - 最窄，固定寬度 */}
@@ -34,16 +37,16 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             <nav className="space-y-1 mb-6">
               <a
                 href="/"
-                className="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-gray-800 transition-colors group relative"
+                className={`flex items-center gap-4 px-4 py-3 rounded-full transition-colors group relative ${pathname === '/' ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
               >
                 <svg
-                  className="w-6 h-6 text-blue-500"
+                  className={`w-6 h-6 ${pathname === '/' ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}
                   fill="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
                 </svg>
-                <span className="font-bold text-blue-500 text-xl">Home</span>
+                <span className={`font-bold text-xl ${pathname === '/' ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}>Home</span>
               </a>
               
               <a
@@ -108,10 +111,10 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
               
               <a
                 href="/profile"
-                className="flex items-center gap-4 px-4 py-3 rounded-full hover:bg-gray-800 transition-colors group"
+                className={`flex items-center gap-4 px-4 py-3 rounded-full transition-colors group ${isProfile ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
               >
                 <svg
-                  className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors"
+                  className={`w-6 h-6 transition-colors ${isProfile ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -123,7 +126,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   />
                 </svg>
-                <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl">Profile</span>
+                <span className={`font-bold text-xl transition-colors ${isProfile ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500'}`}>Profile</span>
               </a>
             </nav>
             

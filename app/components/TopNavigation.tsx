@@ -1,20 +1,57 @@
 'use client';
 
+import Link from 'next/link';
 import { signOut } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
 
 interface TopNavigationProps {
-  variant?: 'home' | 'post-detail';
+  variant?: 'home' | 'post-detail' | 'profile';
   title?: string;
+  subtitle?: string;
   onBack?: () => void;
 }
 
 export default function TopNavigation({ 
   variant = 'home',
   title,
+  subtitle,
   onBack 
 }: TopNavigationProps) {
   const { currentUser } = useUserStore();
+
+  if (variant === 'profile') {
+    return (
+      <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
+        <div className="flex items-center gap-4 px-4 py-3">
+          <Link
+            href="/"
+            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+            aria-label="返回"
+          >
+            <svg
+              className="w-5 h-5 text-gray-100"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </Link>
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-xl font-bold text-gray-100 truncate">{title}</h1>
+            {subtitle && (
+              <span className="text-sm text-gray-500">{subtitle}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'post-detail') {
     return (
