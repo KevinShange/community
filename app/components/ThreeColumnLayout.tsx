@@ -1,8 +1,9 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
 
 interface ThreeColumnLayoutProps {
@@ -13,6 +14,20 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const pathname = usePathname();
   const { currentUser } = useUserStore();
   const isProfile = pathname === '/profile';
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
   return (
     <div className="flex min-h-screen bg-gray-950 text-gray-100">
       {/* 左側導航欄 - 最窄，固定寬度 */}
@@ -140,8 +155,19 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             
             {/* 用戶資訊（登入後由 AuthGuard 保護，此處一定有 currentUser） */}
             {currentUser && (
-            <div className="mt-auto pt-8">
-              <div className="flex items-center gap-3 p-3 rounded-full hover:bg-gray-800 transition-colors cursor-pointer group">
+            <div className="mt-auto pt-8 relative" ref={userMenuRef}>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setUserMenuOpen((prev) => !prev)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setUserMenuOpen((prev) => !prev);
+                  }
+                }}
+                className="flex items-center gap-3 p-3 rounded-full hover:bg-gray-800 transition-colors cursor-pointer group"
+              >
                 <img 
                   src={currentUser.avatar} 
                   alt={currentUser.name}
@@ -151,7 +177,15 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   <div className="font-semibold text-gray-100 truncate">{currentUser.name}</div>
                   <div className="text-sm text-gray-500 truncate">{currentUser.handle}</div>
                 </div>
-                <button className="p-1 hover:bg-gray-700 rounded-full transition-colors">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUserMenuOpen((prev) => !prev);
+                  }}
+                  className="p-1 hover:bg-gray-700 rounded-full transition-colors"
+                  aria-label="更多選項"
+                >
                   <svg
                     className="w-5 h-5 text-gray-400"
                     fill="currentColor"
@@ -161,6 +195,21 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   </svg>
                 </button>
               </div>
+              {userMenuOpen && (
+                <div
+                  className="absolute bottom-full left-0 right-0 mb-2 py-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl z-50 min-w-[200px]"
+                  role="menu"
+                >
+                  <button
+                    type="button"
+                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1"
+                    role="menuitem"
+                  >
+                    登出
+                  </button>
+                </div>
+              )}
             </div>
             )}
           </div>
