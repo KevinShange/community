@@ -5,11 +5,14 @@ import PostComposer from '../components/PostComposer';
 import CommentList from '../components/CommentList';
 import CommentForm from '../components/CommentForm';
 import ContentWithLinks from '../components/ContentWithLinks';
+import PostMenuDropdown from '../components/PostMenuDropdown';
 import { usePostStore } from '@/store/usePostStore';
+import { useUserStore } from '@/store/useUserStore';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { posts, feed, toggleLike, toggleRetweet } = usePostStore();
+  const { posts, feed, toggleLike, toggleRetweet, deletePost } = usePostStore();
+  const { currentUser } = useUserStore();
   const router = useRouter();
 
   // 格式化時間顯示
@@ -88,11 +91,12 @@ export default function Home() {
                   <span className="text-gray-500 text-[15px]">·</span>
                   <span className="text-gray-500 text-[15px]">{formatTime(post.createdAt)}</span>
                   <div className="ml-auto">
-                    <button className="p-1.5 hover:bg-blue-500/10 rounded-full transition-colors group">
-                      <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
-                      </svg>
-                    </button>
+                    <PostMenuDropdown
+                      post={post}
+                      currentUser={currentUser}
+                      onToggleRetweet={toggleRetweet}
+                      onDeletePost={deletePost}
+                    />
                   </div>
                 </div>
                 

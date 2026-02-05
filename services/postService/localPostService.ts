@@ -86,5 +86,9 @@ export function createLocalPostService(updatePosts: UpdatePostsFn): IPostService
         })
       );
     },
+
+    deletePost(postId: PostId) {
+      updatePosts((prev) => prev.filter((p) => p.id !== postId));
+    },
   };
 }

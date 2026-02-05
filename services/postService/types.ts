@@ -27,4 +27,5 @@ export interface IPostService {
   toggleLike(postId: PostId): void;
   toggleRetweet(postId: PostId): void;
   toggleCommentLike(postId: PostId, commentId: PostId): void;
+  deletePost(postId: PostId): void;
 }

@@ -7,9 +7,10 @@ import CommentList from './CommentList';
 import CommentForm from './CommentForm';
 import ContentWithLinks from './ContentWithLinks';
 import EditProfileModal from './EditProfileModal';
+import PostMenuDropdown from './PostMenuDropdown';
 import { useUserStore } from '@/store/useUserStore';
 import { usePostStore } from '@/store/usePostStore';
-import type { Post } from '@/types/models';
+import type { Post, Author } from '@/types/models';
 
 // 假資料：地點（追蹤數改為實際資料）
 const FAKE_LOCATION = 'San Francisco, CA';
@@ -92,7 +93,7 @@ interface ProfileViewProps {
 
 export default function ProfileView({ viewedHandle }: ProfileViewProps) {
   const { currentUser: loggedInUser, setCurrentUser } = useUserStore();
-  const { posts, toggleLike, toggleRetweet } = usePostStore();
+  const { posts, toggleLike, toggleRetweet, deletePost } = usePostStore();
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
   const [showEditModal, setShowEditModal] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -372,8 +373,10 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
             <ProfilePostCard
               key={post.retweetedBy ? `${post.id}-${post.retweetedBy.handle}-${post.retweetedAt ?? ''}` : post.id}
               post={post}
+              currentUser={loggedInUser}
               onToggleLike={() => toggleLike(post.id)}
               onToggleRetweet={() => toggleRetweet(post.id)}
+              onDeletePost={deletePost}
               formatTime={formatTime}
               onGoToProfile={(handle) => router.push(`/profile/${encodeURIComponent(handle)}`)}
             />
@@ -386,8 +389,10 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
             <ProfilePostCard
               key={post.id}
               post={post}
+              currentUser={loggedInUser}
               onToggleLike={() => toggleLike(post.id)}
               onToggleRetweet={() => toggleRetweet(post.id)}
+              onDeletePost={deletePost}
               formatTime={formatTime}
               onGoToProfile={(handle) => router.push(`/profile/${encodeURIComponent(handle)}`)}
             />
@@ -438,14 +443,18 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
 
 function ProfilePostCard({
   post,
+  currentUser,
   onToggleLike,
   onToggleRetweet,
+  onDeletePost,
   formatTime,
   onGoToProfile,
 }: {
   post: Post;
+  currentUser: Author | null;
   onToggleLike: () => void;
   onToggleRetweet: () => void;
+  onDeletePost: (postId: string | number) => void;
   formatTime: (d: string | Date) => string;
   onGoToProfile: (handle: string) => void;
 }) {
@@ -490,11 +499,12 @@ function ProfilePostCard({
             <span className="text-gray-500">·</span>
             <span className="text-gray-500 text-[15px]">{formatTime(post.createdAt)}</span>
             <div className="ml-auto">
-              <button className="p-1.5 hover:bg-blue-500/10 rounded-full transition-colors">
-                <svg className="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                </svg>
-              </button>
+              <PostMenuDropdown
+                post={post}
+                currentUser={currentUser}
+                onToggleRetweet={onToggleRetweet}
+                onDeletePost={onDeletePost}
+              />
             </div>
           </div>
           <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-3">

@@ -183,6 +183,22 @@ export function createApiPostService(
         })
         .catch(handleError);
     },
+
+    deletePost(postId: PostId) {
+      updatePosts((prev) => prev.filter((p) => p.id !== postId));
+      fetch(`/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: currentUser }),
+      })
+        .then((res) => {
+          if (!res.ok) throw new Error('Delete failed');
+        })
+        .catch((err) => {
+          handleError(err);
+          refetch?.();
+        });
+    },
   };
 }
 

@@ -17,6 +17,7 @@ interface PostStoreContextType {
   toggleCommentLike: (postId: string | number, commentId: string | number) => void;
   addComment: (postId: string | number, comment: Omit<Comment, 'id' | 'postId'>) => void;
   addPost: (post: Omit<Post, 'id' | 'createdAt' | 'likeCount' | 'isLikedByMe' | 'replyCount' | 'retweetCount' | 'isRetweetedByMe' | 'comments'>) => void;
+  deletePost: (postId: string | number) => void;
 }
 
 const PostStoreContext = createContext<PostStoreContextType | undefined>(undefined);
@@ -54,6 +55,7 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         toggleLike: () => {},
         toggleRetweet: () => {},
         toggleCommentLike: () => {},
+        deletePost: () => {},
       };
     }
     return createApiPostService(currentUser, (updater) => setPosts(updater), refetch);
@@ -70,6 +72,7 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         toggleCommentLike: postService.toggleCommentLike,
         addComment: postService.addComment,
         addPost: postService.addPost,
+        deletePost: postService.deletePost,
       }}
     >
       {children}
