@@ -1,4 +1,5 @@
 import TopNavigation from '../../components/TopNavigation';
+import ContentWithLinks from '../../components/ContentWithLinks';
 
 // 主贴文假资料
 const mainPost = {
@@ -124,7 +125,7 @@ export default function PostDetail() {
             {/* 内容 */}
             <div className="mb-3">
               <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                {mainPost.content}
+                <ContentWithLinks content={mainPost.content} />
               </p>
             </div>
             
@@ -270,7 +271,7 @@ export default function PostDetail() {
                 {/* 内容 */}
                 <div className="mb-3">
                   <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                    {reply.content}
+                    <ContentWithLinks content={reply.content} />
                   </p>
                 </div>
                 

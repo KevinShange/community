@@ -3,6 +3,7 @@
 import type { Comment } from '@/types/models';
 import { useRouter } from 'next/navigation';
 import { usePostStore } from '@/store/usePostStore';
+import ContentWithLinks from './ContentWithLinks';
 
 interface CommentListProps {
   postId: string | number;
@@ -76,7 +77,7 @@ export default function CommentList({ postId, comments }: CommentListProps) {
             {/* 留言內容 */}
             <div className="mb-2">
               <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                {comment.content}
+                <ContentWithLinks content={comment.content} />
               </p>
             </div>
             

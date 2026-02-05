@@ -129,7 +129,7 @@ export default function TopNavigation({
             className="flex-1 relative py-3 group"
           >
             <span className={`text-[15px] ${isForYou ? 'font-bold text-gray-100' : 'text-gray-500 group-hover:text-gray-300 transition-colors'}`}>
-              For You
+              All
             </span>
             {isForYou && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
           </button>
