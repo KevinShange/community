@@ -46,7 +46,10 @@ export default function Home() {
           </div>
         )}
         {posts.map((post) => (
-          <article key={post.id} className="px-4 py-6 hover:bg-gray-950/50 transition-colors">
+          <article
+            key={post.retweetedBy ? `${post.id}-${post.retweetedBy.handle}-${post.retweetedAt ?? ''}` : post.id}
+            className="px-4 py-6 hover:bg-gray-950/50 transition-colors"
+          >
             <div className="flex items-start gap-3">
               {/* 使用者頭像 */}
               <img 
@@ -56,6 +59,22 @@ export default function Home() {
               />
               
               <div className="flex-1 min-w-0">
+                {/* 轉發標示：關注用戶的轉發 */}
+                {post.retweetedBy && (
+                  <div className="flex items-center gap-2 mb-1 text-gray-500 text-[13px]">
+                    <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                    </svg>
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/profile/${encodeURIComponent(post.retweetedBy!.handle)}`)}
+                      className="hover:underline text-gray-500 hover:text-gray-300"
+                    >
+                      {post.retweetedBy.name}
+                    </button>
+                    <span>轉發了</span>
+                  </div>
+                )}
                 {/* 使用者資訊 */}
                 <div className="flex items-center gap-2 mb-2">
                   <span className="font-bold text-gray-100 text-[15px]">{post.author.name}</span>

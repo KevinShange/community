@@ -3,10 +3,69 @@ import { prisma } from '@/lib/prisma';
 import type { Post } from '@/types/models';
 import { headers } from 'next/headers';
 
+type FeedItem = {
+  post: Awaited<ReturnType<typeof prisma.post.findMany>>[number];
+  sortAt: Date;
+  retweetedBy?: { name: string; avatar: string | null; handle: string };
+  retweetedAt?: Date;
+};
+
+function formatPostToResponse(
+  post: FeedItem['post'],
+  opts: {
+    retweetedBy?: FeedItem['retweetedBy'];
+    retweetedAt?: Date;
+    retweetCountByPostId: Map<string, number>;
+    myPostLikeIds: Set<string>;
+    myPostRetweetIds: Set<string>;
+    myCommentLikeIds: Set<string>;
+    me: { id: string } | null;
+  }
+): Post {
+  const avatar = post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.handle}`;
+  const base: Post = {
+    id: post.id,
+    author: {
+      name: post.author.name,
+      avatar,
+      handle: post.author.handle,
+    },
+    content: post.content,
+    createdAt: post.createdAt.toISOString(),
+    likeCount: post.likeCount,
+    isLikedByMe: opts.me ? opts.myPostLikeIds.has(post.id) : false,
+    replyCount: post.comments.length,
+    retweetCount: opts.retweetCountByPostId.get(post.id) ?? post.retweetCount ?? 0,
+    isRetweetedByMe: opts.me ? opts.myPostRetweetIds.has(post.id) : false,
+    comments: post.comments.map((comment) => ({
+      id: comment.id,
+      postId: post.id,
+      author: {
+        name: comment.author.name,
+        avatar: comment.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.handle}`,
+        handle: comment.author.handle,
+      },
+      content: comment.content,
+      createdAt: comment.createdAt.toISOString(),
+      likeCount: comment.likeCount,
+      isLikedByMe: opts.me ? opts.myCommentLikeIds.has(comment.id) : false,
+    })),
+  };
+  if (opts.retweetedBy) {
+    base.retweetedBy = {
+      name: opts.retweetedBy.name,
+      avatar: opts.retweetedBy.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${opts.retweetedBy.handle}`,
+      handle: opts.retweetedBy.handle,
+    };
+    base.retweetedAt = opts.retweetedAt?.toISOString();
+  }
+  return base;
+}
+
 /**
  * GET /api/posts
  * 從資料庫查詢貼文列表
- * Query: feed=following 時僅回傳登入使用者有 follow 的作者的貼文
+ * Query: feed=following 時回傳登入使用者關注的作者的貼文，以及關注用戶的轉發
  */
 export async function GET(req: Request) {
   try {
@@ -16,8 +75,6 @@ export async function GET(req: Request) {
     const userHandle = h.get('x-user-handle');
     const me = userHandle ? await prisma.user.findUnique({ where: { handle: userHandle } }) : null;
 
-    // Following feed：需登入，且只顯示有 follow 的作者的貼文
-    let authorIdFilter: { in: string[] } | undefined;
     if (feed === 'following' && me) {
       const follows = await prisma.follow.findMany({
         where: { followerId: me.id },
@@ -25,32 +82,122 @@ export async function GET(req: Request) {
       });
       const followingIds = follows.map((f) => f.followingId);
       if (followingIds.length === 0) {
-        // 沒有 follow 任何人，回傳空陣列
         return NextResponse.json([]);
       }
-      authorIdFilter = { in: followingIds };
+
+      // 1) 關注用戶發的貼文（原創）
+      const postsByFollowing = await prisma.post.findMany({
+        where: { authorId: { in: followingIds } },
+        include: {
+          author: true,
+          comments: {
+            include: { author: true },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      // 2) 關注用戶的轉發（PostRetweet 中 userId in followingIds）
+      const retweetsByFollowing = await prisma.postRetweet.findMany({
+        where: { userId: { in: followingIds } },
+        include: {
+          post: {
+            include: {
+              author: true,
+              comments: {
+                include: { author: true },
+                orderBy: { createdAt: 'asc' },
+              },
+            },
+          },
+          user: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const feedItems: FeedItem[] = [];
+      for (const p of postsByFollowing) {
+        feedItems.push({ post: p, sortAt: p.createdAt });
+      }
+      for (const r of retweetsByFollowing) {
+        feedItems.push({
+          post: r.post,
+          sortAt: r.createdAt,
+          retweetedBy: {
+            name: r.user.name,
+            avatar: r.user.avatar,
+            handle: r.user.handle,
+          },
+          retweetedAt: r.createdAt,
+        });
+      }
+      feedItems.sort((a, b) => b.sortAt.getTime() - a.sortAt.getTime());
+
+      const allPostIds = [...new Set(feedItems.map((item) => item.post.id))];
+      const retweetCountByPostId = new Map<string, number>();
+      if (allPostIds.length) {
+        const retweets = await prisma.postRetweet.findMany({
+          where: { postId: { in: allPostIds } },
+          select: { postId: true },
+        });
+        for (const r of retweets) {
+          retweetCountByPostId.set(r.postId, (retweetCountByPostId.get(r.postId) ?? 0) + 1);
+        }
+      }
+
+      const myPostLikeIds = new Set<string>();
+      const myPostRetweetIds = new Set<string>();
+      const myCommentLikeIds = new Set<string>();
+      if (allPostIds.length) {
+        const commentIds = feedItems.flatMap((item) => item.post.comments.map((c) => c.id));
+        const [likes, myRetweets] = await Promise.all([
+          prisma.postLike.findMany({
+            where: { userId: me.id, postId: { in: allPostIds } },
+            select: { postId: true },
+          }),
+          prisma.postRetweet.findMany({
+            where: { userId: me.id, postId: { in: allPostIds } },
+            select: { postId: true },
+          }),
+        ]);
+        likes.forEach((l) => myPostLikeIds.add(l.postId));
+        myRetweets.forEach((r) => myPostRetweetIds.add(r.postId));
+        if (commentIds.length) {
+          const cl = await prisma.commentLike.findMany({
+            where: { userId: me.id, commentId: { in: commentIds } },
+            select: { commentId: true },
+          });
+          cl.forEach((l) => myCommentLikeIds.add(l.commentId));
+        }
+      }
+
+      const formattedPosts: Post[] = feedItems.map((item) =>
+        formatPostToResponse(item.post, {
+          retweetedBy: item.retweetedBy,
+          retweetedAt: item.retweetedAt,
+          retweetCountByPostId,
+          myPostLikeIds,
+          myPostRetweetIds,
+          myCommentLikeIds,
+          me,
+        })
+      );
+      return NextResponse.json(formattedPosts);
     }
 
-    // 查詢貼文（可依作者篩選），包含作者資訊和留言
+    // 非 following：原本邏輯（全部貼文或依作者篩選此處未用，僅查全部）
     const posts = await prisma.post.findMany({
-      where: authorIdFilter ? { authorId: authorIdFilter } : undefined,
       include: {
         author: true,
         comments: {
-          include: {
-            author: true,
-          },
-          orderBy: {
-            createdAt: 'asc',
-          },
+          include: { author: true },
+          orderBy: { createdAt: 'asc' },
         },
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: { createdAt: 'desc' },
     });
 
-    // 以 PostRetweet 實際筆數作為轉發次數（避免 Post.retweetCount 未同步或舊文件缺欄位）
     const postIds = posts.map((p) => p.id);
     const retweetCountByPostId = new Map<string, number>();
     if (postIds.length) {
@@ -63,13 +210,11 @@ export async function GET(req: Request) {
       }
     }
 
-    // 若有登入使用者，查詢目前使用者對貼文/留言的按讚與轉發狀態
     const myPostLikeIds = new Set<string>();
     const myPostRetweetIds = new Set<string>();
     const myCommentLikeIds = new Set<string>();
     if (me) {
       const commentIds = posts.flatMap((p) => p.comments.map((c) => c.id));
-
       if (postIds.length) {
         const [likes, retweets] = await Promise.all([
           prisma.postLike.findMany({
@@ -93,36 +238,16 @@ export async function GET(req: Request) {
       }
     }
 
-    // 轉換為前端需要的格式
-    const formattedPosts: Post[] = posts.map((post) => ({
-      id: post.id,
-      author: {
-        name: post.author.name,
-        avatar: post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.handle}`,
-        handle: post.author.handle,
-      },
-      content: post.content,
-      createdAt: post.createdAt.toISOString(),
-      likeCount: post.likeCount,
-      isLikedByMe: me ? myPostLikeIds.has(post.id) : false,
-      replyCount: post.comments.length,
-      retweetCount: retweetCountByPostId.get(post.id) ?? post.retweetCount ?? 0,
-      isRetweetedByMe: me ? myPostRetweetIds.has(post.id) : false,
-      comments: post.comments.map((comment) => ({
-        id: comment.id,
-        postId: post.id,
-        author: {
-          name: comment.author.name,
-          avatar: comment.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.handle}`,
-          handle: comment.author.handle,
-        },
-        content: comment.content,
-        createdAt: comment.createdAt.toISOString(),
-        likeCount: comment.likeCount,
-        isLikedByMe: me ? myCommentLikeIds.has(comment.id) : false,
-      })),
-    }));
-
+    const feedItems: FeedItem[] = posts.map((p) => ({ post: p, sortAt: p.createdAt }));
+    const formattedPosts: Post[] = feedItems.map((item) =>
+      formatPostToResponse(item.post, {
+        retweetCountByPostId,
+        myPostLikeIds,
+        myPostRetweetIds,
+        myCommentLikeIds,
+        me,
+      })
+    );
     return NextResponse.json(formattedPosts);
   } catch (error) {
     console.error('Error fetching posts:', error);

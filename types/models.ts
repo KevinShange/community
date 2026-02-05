@@ -31,6 +31,7 @@ export interface Comment {
 
 /**
  * 貼文（Post）資料模型
+ * 在 Follow 動態中若為「被關注用戶轉發」則會帶上 retweetedBy / retweetedAt
  */
 export interface Post {
   id: string | number;
@@ -43,4 +44,8 @@ export interface Post {
   retweetCount: number;
   isRetweetedByMe: boolean;
   comments: Comment[];
+  /** 若為轉發出現在動態中，表示是誰轉發的 */
+  retweetedBy?: Author;
+  /** 轉發時間（ISO 字串） */
+  retweetedAt?: string;
 }
