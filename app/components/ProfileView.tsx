@@ -90,6 +90,7 @@ interface ProfileViewProps {
 }
 
 export default function ProfileView({ viewedHandle }: ProfileViewProps) {
+  const router = useRouter();
   const { currentUser: loggedInUser, setCurrentUser } = useUserStore();
   const { posts, toggleLike, toggleRetweet, deletePost } = usePostStore();
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
