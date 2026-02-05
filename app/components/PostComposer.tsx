@@ -1,9 +1,10 @@
-'use client';
-
+ 'use client';
+ 
 import { useState } from 'react';
 import { usePostStore } from '@/store/usePostStore';
 import { useUserStore } from '@/store/useUserStore';
 import { getCountedLength, truncateToCounted, MAX_POST_LENGTH } from '@/lib/postUtils';
+import HighlightedTextarea from './HighlightedTextarea';
 
 export default function PostComposer() {
   const [content, setContent] = useState('');
@@ -39,13 +40,13 @@ export default function PostComposer() {
         />
         
         <div className="flex-1">
-          {/* 輸入框 */}
+          {/* 輸入框（含網址高亮） */}
           <div className="mb-4">
-            <textarea
+            <HighlightedTextarea
               value={content}
-              onChange={(e) => handleChange(e.target.value)}
+              onChange={handleChange}
               placeholder="What's happening?"
-              className="w-full bg-transparent text-gray-100 placeholder:text-gray-500 text-xl resize-none focus:outline-none min-h-[80px] leading-relaxed"
+              className="text-gray-100 placeholder:text-gray-500"
               rows={3}
             />
           </div>
