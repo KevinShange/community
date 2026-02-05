@@ -9,7 +9,7 @@ export type UpdatePostsFn = (updater: (prev: Post[]) => Post[]) => void;
 /** 新增貼文時傳入的 payload（不含自動生成欄位） */
 export type AddPostPayload = Omit<
   Post,
-  'id' | 'createdAt' | 'likeCount' | 'isLikedByMe' | 'replyCount' | 'comments'
+  'id' | 'createdAt' | 'likeCount' | 'isLikedByMe' | 'replyCount' | 'retweetCount' | 'isRetweetedByMe' | 'comments'
 >;
 
 /** 新增留言時傳入的 payload（不含 id、postId） */
@@ -25,5 +25,6 @@ export interface IPostService {
   addPost(post: AddPostPayload): void;
   addComment(postId: PostId, comment: AddCommentPayload): void;
   toggleLike(postId: PostId): void;
+  toggleRetweet(postId: PostId): void;
   toggleCommentLike(postId: PostId, commentId: PostId): void;
 }

@@ -92,7 +92,7 @@ interface ProfileViewProps {
 
 export default function ProfileView({ viewedHandle }: ProfileViewProps) {
   const { currentUser: loggedInUser, setCurrentUser } = useUserStore();
-  const { posts, toggleLike } = usePostStore();
+  const { posts, toggleLike, toggleRetweet } = usePostStore();
   const [activeTab, setActiveTab] = useState<ProfileTab>('posts');
   const [showEditModal, setShowEditModal] = useState(false);
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
@@ -354,6 +354,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
               key={post.id}
               post={post}
               onToggleLike={() => toggleLike(post.id)}
+              onToggleRetweet={() => toggleRetweet(post.id)}
               formatTime={formatTime}
             />
           ))}
@@ -366,6 +367,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
               key={post.id}
               post={post}
               onToggleLike={() => toggleLike(post.id)}
+              onToggleRetweet={() => toggleRetweet(post.id)}
               formatTime={formatTime}
             />
           ))}
@@ -416,13 +418,14 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
 function ProfilePostCard({
   post,
   onToggleLike,
+  onToggleRetweet,
   formatTime,
 }: {
   post: Post;
   onToggleLike: () => void;
+  onToggleRetweet: () => void;
   formatTime: (d: string | Date) => string;
 }) {
-  const fakeRetweet = getFakeRetweetCount(post.id);
   const fakeViews = getFakeViewCount(post.id);
   const router = useRouter();
 
@@ -472,14 +475,23 @@ function ProfilePostCard({
               </div>
               <span className="text-sm text-gray-500 group-hover:text-blue-500">{post.replyCount}</span>
             </button>
-            <button className="flex items-center gap-2 group hover:text-green-500 transition-colors">
-              <span className="text-sm text-gray-500 group-hover:text-green-500">RETWEET</span>
-              <div className="p-2 group-hover:bg-green-500/10 rounded-full transition-colors">
-                <svg className="w-5 h-5 text-gray-500 group-hover:text-green-500" fill="currentColor" viewBox="0 0 24 24">
+            <button
+              onClick={onToggleRetweet}
+              className="flex items-center gap-2 group hover:text-green-500 transition-colors"
+            >
+              <span className={`text-sm transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`}>RETWEET</span>
+              <div className={`p-2 rounded-full transition-colors ${post.isRetweetedByMe ? 'bg-green-500/10' : 'group-hover:bg-green-500/10'}`}>
+                <svg
+                  className={`w-5 h-5 transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`}
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
                 </svg>
               </div>
-              <span className="text-sm text-gray-500 group-hover:text-green-500">{fakeRetweet}</span>
+              <span className={`text-sm transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`}>
+                {post.retweetCount > 1000 ? `${(post.retweetCount / 1000).toFixed(1)}k` : post.retweetCount}
+              </span>
             </button>
             <button onClick={onToggleLike} className="flex items-center gap-2 group hover:text-red-500 transition-colors">
               <div

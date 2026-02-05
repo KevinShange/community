@@ -40,5 +40,7 @@ export interface Post {
   likeCount: number;
   isLikedByMe: boolean;
   replyCount: number;
+  retweetCount: number;
+  isRetweetedByMe: boolean;
   comments: Comment[];
 }

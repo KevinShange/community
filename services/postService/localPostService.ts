@@ -17,6 +17,8 @@ export function createLocalPostService(updatePosts: UpdatePostsFn): IPostService
         likeCount: 0,
         isLikedByMe: false,
         replyCount: 0,
+        retweetCount: 0,
+        isRetweetedByMe: false,
         comments: [],
       };
       updatePosts((prev) => [newPost, ...prev]);
@@ -48,6 +50,19 @@ export function createLocalPostService(updatePosts: UpdatePostsFn): IPostService
             ...post,
             isLikedByMe: !post.isLikedByMe,
             likeCount: post.isLikedByMe ? post.likeCount - 1 : post.likeCount + 1,
+          };
+        })
+      );
+    },
+
+    toggleRetweet(postId: PostId) {
+      updatePosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+          return {
+            ...post,
+            isRetweetedByMe: !post.isRetweetedByMe,
+            retweetCount: post.isRetweetedByMe ? post.retweetCount - 1 : post.retweetCount + 1,
           };
         })
       );

@@ -9,7 +9,7 @@ import { usePostStore } from '@/store/usePostStore';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { posts, feed, toggleLike } = usePostStore();
+  const { posts, feed, toggleLike, toggleRetweet } = usePostStore();
   const router = useRouter();
 
   // 格式化時間顯示
@@ -97,12 +97,22 @@ export default function Home() {
                   </button>
                   
                   {/* 轉發 */}
-                  <button className="flex items-center gap-2 group hover:text-green-500 transition-colors">
-                    <div className="p-2 group-hover:bg-green-500/10 rounded-full transition-colors">
-                      <svg className="w-5 h-5 text-gray-500 group-hover:text-green-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <button
+                    onClick={() => toggleRetweet(post.id)}
+                    className="flex items-center gap-2 group hover:text-green-500 transition-colors"
+                  >
+                    <div className={`p-2 rounded-full transition-colors ${post.isRetweetedByMe ? 'bg-green-500/10' : 'group-hover:bg-green-500/10'}`}>
+                      <svg
+                        className={`w-5 h-5 transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`}
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
                         <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
                       </svg>
                     </div>
+                    <span className={`text-sm transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`}>
+                      {post.retweetCount > 1000 ? `${(post.retweetCount / 1000).toFixed(1)}k` : post.retweetCount}
+                    </span>
                   </button>
                   
                   {/* 喜歡 */}

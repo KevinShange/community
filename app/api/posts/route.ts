@@ -50,19 +50,27 @@ export async function GET(req: Request) {
       },
     });
 
-    // 若有登入使用者，查詢目前使用者對貼文/留言的按讚狀態
+    // 若有登入使用者，查詢目前使用者對貼文/留言的按讚與轉發狀態
     const myPostLikeIds = new Set<string>();
+    const myPostRetweetIds = new Set<string>();
     const myCommentLikeIds = new Set<string>();
     if (me) {
       const postIds = posts.map((p) => p.id);
       const commentIds = posts.flatMap((p) => p.comments.map((c) => c.id));
 
       if (postIds.length) {
-        const likes = await prisma.postLike.findMany({
-          where: { userId: me.id, postId: { in: postIds } },
-          select: { postId: true },
-        });
+        const [likes, retweets] = await Promise.all([
+          prisma.postLike.findMany({
+            where: { userId: me.id, postId: { in: postIds } },
+            select: { postId: true },
+          }),
+          prisma.postRetweet.findMany({
+            where: { userId: me.id, postId: { in: postIds } },
+            select: { postId: true },
+          }),
+        ]);
         likes.forEach((l) => myPostLikeIds.add(l.postId));
+        retweets.forEach((r) => myPostRetweetIds.add(r.postId));
       }
       if (commentIds.length) {
         const likes = await prisma.commentLike.findMany({
@@ -86,6 +94,8 @@ export async function GET(req: Request) {
       likeCount: post.likeCount,
       isLikedByMe: me ? myPostLikeIds.has(post.id) : false,
       replyCount: post.comments.length,
+      retweetCount: post.retweetCount,
+      isRetweetedByMe: me ? myPostRetweetIds.has(post.id) : false,
       comments: post.comments.map((comment) => ({
         id: comment.id,
         postId: post.id,
@@ -176,6 +186,8 @@ export async function POST(req: Request) {
       likeCount: created.likeCount,
       isLikedByMe: false,
       replyCount: created.comments.length,
+      retweetCount: 0,
+      isRetweetedByMe: false,
       comments: [],
     };
 

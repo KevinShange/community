@@ -33,6 +33,8 @@ export function createApiPostService(
         likeCount: 0,
         isLikedByMe: false,
         replyCount: 0,
+        retweetCount: 0,
+        isRetweetedByMe: false,
         comments: [],
       };
       updatePosts((prev) => [optimistic, ...prev]);
@@ -120,6 +122,31 @@ export function createApiPostService(
                     ? p.likeCount + 1
                     : Math.max(0, p.likeCount - 1);
               return { ...p, isLikedByMe: nextLiked, likeCount: nextCount };
+            })
+          );
+        })
+        .catch(handleError);
+    },
+
+    toggleRetweet(postId: PostId) {
+      fetchJson<{ retweeted: boolean }>(`/api/posts/${postId}/retweet`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user: currentUser }),
+      })
+        .then(({ retweeted }) => {
+          updatePosts((prev) =>
+            prev.map((p) => {
+              if (p.id !== postId) return p;
+              const wasRetweeted = p.isRetweetedByMe;
+              const nextRetweeted = retweeted;
+              const nextCount =
+                nextRetweeted === wasRetweeted
+                  ? p.retweetCount
+                  : nextRetweeted
+                    ? p.retweetCount + 1
+                    : Math.max(0, p.retweetCount - 1);
+              return { ...p, isRetweetedByMe: nextRetweeted, retweetCount: nextCount };
             })
           );
         })

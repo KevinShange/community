@@ -28,8 +28,9 @@ model User {
   comments Comment[]
   drafts   Draft[]
 
-  postLikes    PostLike[]
-  commentLikes CommentLike[]
+  postLikes     PostLike[]
+  commentLikes  CommentLike[]
+  postRetweets  PostRetweet[]
 
   // 追蹤關係
   following Follow[] @relation("UserFollowing")
@@ -50,16 +51,18 @@ model Account {
 }
 
 model Post {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  authorId  String   @db.ObjectId
-  author    User     @relation(fields: [authorId], references: [id])
-  content   String
-  likeCount Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  authorId     String   @db.ObjectId
+  author       User     @relation(fields: [authorId], references: [id])
+  content      String
+  likeCount    Int      @default(0)
+  retweetCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  comments Comment[]
-  likes    PostLike[]
+  comments  Comment[]
+  likes     PostLike[]
+  retweets  PostRetweet[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -107,6 +110,19 @@ model CommentLike {
   @@unique([commentId, userId])
   @@index([userId])
   @@index([commentId])
+}
+
+model PostRetweet {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  postId    String   @db.ObjectId
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+  @@index([postId])
 }
 
 model Draft {

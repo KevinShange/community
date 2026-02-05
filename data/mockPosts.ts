@@ -17,6 +17,8 @@ export const mockPosts: Post[] = [
     likeCount: 1200,
     isLikedByMe: false,
     replyCount: 12,
+    retweetCount: 42,
+    isRetweetedByMe: false,
     comments: [
       {
         id: 1,
@@ -58,6 +60,8 @@ export const mockPosts: Post[] = [
     likeCount: 562,
     isLikedByMe: true,
     replyCount: 24,
+    retweetCount: 18,
+    isRetweetedByMe: true,
     comments: [
       {
         id: 3,
@@ -99,6 +103,8 @@ export const mockPosts: Post[] = [
     likeCount: 941,
     isLikedByMe: false,
     replyCount: 8,
+    retweetCount: 7,
+    isRetweetedByMe: false,
     comments: [
       {
         id: 5,
@@ -127,6 +133,8 @@ export const mockPosts: Post[] = [
     likeCount: 2100,
     isLikedByMe: true,
     replyCount: 56,
+    retweetCount: 89,
+    isRetweetedByMe: false,
     comments: [
       {
         id: 6,

@@ -13,9 +13,10 @@ interface PostStoreContextType {
   feed: FeedType;
   setFeed: (feed: FeedType) => void;
   toggleLike: (postId: string | number) => void;
+  toggleRetweet: (postId: string | number) => void;
   toggleCommentLike: (postId: string | number, commentId: string | number) => void;
   addComment: (postId: string | number, comment: Omit<Comment, 'id' | 'postId'>) => void;
-  addPost: (post: Omit<Post, 'id' | 'createdAt' | 'likeCount' | 'isLikedByMe' | 'replyCount' | 'comments'>) => void;
+  addPost: (post: Omit<Post, 'id' | 'createdAt' | 'likeCount' | 'isLikedByMe' | 'replyCount' | 'retweetCount' | 'isRetweetedByMe' | 'comments'>) => void;
 }
 
 const PostStoreContext = createContext<PostStoreContextType | undefined>(undefined);
@@ -51,6 +52,7 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         addPost: () => {},
         addComment: () => {},
         toggleLike: () => {},
+        toggleRetweet: () => {},
         toggleCommentLike: () => {},
       };
     }
@@ -64,6 +66,7 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         feed,
         setFeed,
         toggleLike: postService.toggleLike,
+        toggleRetweet: postService.toggleRetweet,
         toggleCommentLike: postService.toggleCommentLike,
         addComment: postService.addComment,
         addPost: postService.addPost,
