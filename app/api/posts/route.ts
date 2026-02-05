@@ -50,12 +50,24 @@ export async function GET(req: Request) {
       },
     });
 
+    // 以 PostRetweet 實際筆數作為轉發次數（避免 Post.retweetCount 未同步或舊文件缺欄位）
+    const postIds = posts.map((p) => p.id);
+    const retweetCountByPostId = new Map<string, number>();
+    if (postIds.length) {
+      const retweets = await prisma.postRetweet.findMany({
+        where: { postId: { in: postIds } },
+        select: { postId: true },
+      });
+      for (const r of retweets) {
+        retweetCountByPostId.set(r.postId, (retweetCountByPostId.get(r.postId) ?? 0) + 1);
+      }
+    }
+
     // 若有登入使用者，查詢目前使用者對貼文/留言的按讚與轉發狀態
     const myPostLikeIds = new Set<string>();
     const myPostRetweetIds = new Set<string>();
     const myCommentLikeIds = new Set<string>();
     if (me) {
-      const postIds = posts.map((p) => p.id);
       const commentIds = posts.flatMap((p) => p.comments.map((c) => c.id));
 
       if (postIds.length) {
@@ -94,7 +106,7 @@ export async function GET(req: Request) {
       likeCount: post.likeCount,
       isLikedByMe: me ? myPostLikeIds.has(post.id) : false,
       replyCount: post.comments.length,
-      retweetCount: post.retweetCount,
+      retweetCount: retweetCountByPostId.get(post.id) ?? post.retweetCount ?? 0,
       isRetweetedByMe: me ? myPostRetweetIds.has(post.id) : false,
       comments: post.comments.map((comment) => ({
         id: comment.id,

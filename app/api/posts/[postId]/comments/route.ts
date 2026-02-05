@@ -82,7 +82,7 @@ export async function POST(
       likeCount: post.likeCount,
       isLikedByMe: false, // 由前端 optimistic 更新；完整狀態請用 GET /api/posts（帶 x-user-handle）
       replyCount: post.comments.length,
-      retweetCount: post.retweetCount,
+      retweetCount: post.retweetCount ?? 0,
       isRetweetedByMe: false,
       comments: post.comments.map((c) => ({
         id: c.id,
