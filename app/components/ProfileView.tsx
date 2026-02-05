@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import TopNavigation from './TopNavigation';
-import CommentList from './CommentList';
-import CommentForm from './CommentForm';
 import ContentWithLinks from './ContentWithLinks';
 import EditProfileModal from './EditProfileModal';
 import PostMenuDropdown from './PostMenuDropdown';
@@ -379,6 +377,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
               onDeletePost={deletePost}
               formatTime={formatTime}
               onGoToProfile={(handle) => router.push(`/profile/${encodeURIComponent(handle)}`)}
+              onGoToPost={(id) => router.push(`/post-detail/${id}`)}
             />
           ))}
         {activeTab === 'posts' && displayPosts.length === 0 && (
@@ -395,6 +394,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
               onDeletePost={deletePost}
               formatTime={formatTime}
               onGoToProfile={(handle) => router.push(`/profile/${encodeURIComponent(handle)}`)}
+              onGoToPost={(id) => router.push(`/post-detail/${id}`)}
             />
           ))}
         {isSelfProfile && activeTab === 'likes' && likedPosts.length === 0 && (
@@ -449,6 +449,7 @@ function ProfilePostCard({
   onDeletePost,
   formatTime,
   onGoToProfile,
+  onGoToPost,
 }: {
   post: Post;
   currentUser: Author | null;
@@ -457,6 +458,7 @@ function ProfilePostCard({
   onDeletePost: (postId: string | number) => void;
   formatTime: (d: string | Date) => string;
   onGoToProfile: (handle: string) => void;
+  onGoToPost: (postId: string | number) => void;
 }) {
   const fakeViews = getFakeViewCount(post.id);
 
@@ -507,11 +509,23 @@ function ProfilePostCard({
               />
             </div>
           </div>
-          <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words mb-3">
-            <ContentWithLinks content={post.content} />
-          </p>
-          <div className="flex items-center justify-between max-w-md mt-4">
-            <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors">
+          {/* 點選內容轉跳至 Post 頁面 */}
+          <button
+            type="button"
+            className="w-full text-left mb-3"
+            onClick={() => onGoToPost(post.id)}
+          >
+            <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+              <ContentWithLinks content={post.content} />
+            </p>
+          </button>
+          {/* 操作列：阻止點擊冒泡 */}
+          <div className="flex items-center justify-between max-w-md mt-4" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => onGoToPost(post.id)}
+              className="flex items-center gap-2 group hover:text-blue-500 transition-colors"
+            >
               <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                 <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z" />
@@ -562,7 +576,7 @@ function ProfilePostCard({
                 {post.likeCount > 1000 ? `${(post.likeCount / 1000).toFixed(1)}k` : post.likeCount}
               </span>
             </button>
-            <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors">
+            <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors" type="button">
               <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                 <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />
@@ -571,8 +585,6 @@ function ProfilePostCard({
               <span className="text-sm text-gray-500 group-hover:text-blue-500">{fakeViews}</span>
             </button>
           </div>
-          <CommentList postId={post.id} comments={post.comments} />
-          <CommentForm postId={post.id} />
         </div>
       </div>
     </article>
