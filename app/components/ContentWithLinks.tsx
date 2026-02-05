@@ -64,11 +64,10 @@ export default function ContentWithLinks({ content, className = '' }: ContentWit
           );
         }
         if (seg.type === 'mention') {
-          const handle = seg.value.slice(1);
           return (
             <Link
               key={i}
-              href={`/profile/${encodeURIComponent(handle)}`}
+              href={`/profile/${encodeURIComponent(seg.value)}`}
               className="text-blue-500 hover:underline"
             >
               {seg.value}
