@@ -98,6 +98,8 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
+  /** 該 Profile 的貼文（發文 + 轉發），由 /api/posts?profile=handle 取得 */
+  const [profilePosts, setProfilePosts] = useState<Post[] | null>(null);
 
   // 目前正在查看的 handle（若未指定則為登入者）
   const effectiveHandle = viewedHandle ?? loggedInUser?.handle ?? '';
@@ -141,10 +143,27 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
     fetchProfile();
   }, [fetchProfile]);
 
-  // 依目前正在查看的 handle 過濾貼文
+  // 取得該 Profile 的貼文（發文 + 轉發）
+  useEffect(() => {
+    if (!effectiveHandle) {
+      setProfilePosts(null);
+      return;
+    }
+    const headers: HeadersInit = {};
+    if (loggedInUser?.handle) {
+      headers['x-user-handle'] = loggedInUser.handle;
+    }
+    fetch(`/api/posts?profile=${encodeURIComponent(effectiveHandle)}`, { headers })
+      .then((res) => res.json())
+      .then((data: Post[]) => setProfilePosts(Array.isArray(data) ? data : []))
+      .catch(() => setProfilePosts([]));
+  }, [effectiveHandle, loggedInUser?.handle]);
+
+  // 依目前正在查看的 handle 過濾貼文（fallback，當 profile API 未用時）
   const userPosts = effectiveHandle ? posts.filter((p) => p.author.handle === effectiveHandle) : [];
+  const displayPosts = profilePosts ?? userPosts;
   const likedPosts = loggedInUser ? posts.filter((p) => p.isLikedByMe) : [];
-  const postCount = userPosts.length;
+  const postCount = displayPosts.length;
 
   // 若換成查看別人且目前 Tab 在 Likes，上方規則要求不顯示 Likes，因此強制切回 Posts
   useEffect(() => {
@@ -346,19 +365,20 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
         </div>
       </div>
 
-      {/* 貼文列表：Posts 為該使用者的貼文，自身 Profile 額外有 Likes 分頁 */}
+      {/* 貼文列表：Posts 為該使用者的貼文與轉發，自身 Profile 額外有 Likes 分頁 */}
       <div className="divide-y divide-gray-800">
         {activeTab === 'posts' &&
-          userPosts.map((post) => (
+          displayPosts.map((post) => (
             <ProfilePostCard
-              key={post.id}
+              key={post.retweetedBy ? `${post.id}-${post.retweetedBy.handle}-${post.retweetedAt ?? ''}` : post.id}
               post={post}
               onToggleLike={() => toggleLike(post.id)}
               onToggleRetweet={() => toggleRetweet(post.id)}
               formatTime={formatTime}
+              onGoToProfile={(handle) => router.push(`/profile/${encodeURIComponent(handle)}`)}
             />
           ))}
-        {activeTab === 'posts' && userPosts.length === 0 && (
+        {activeTab === 'posts' && displayPosts.length === 0 && (
           <div className="px-4 py-12 text-center text-gray-500 text-[15px]">尚無貼文</div>
         )}
         {isSelfProfile && activeTab === 'likes' &&
@@ -369,6 +389,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
               onToggleLike={() => toggleLike(post.id)}
               onToggleRetweet={() => toggleRetweet(post.id)}
               formatTime={formatTime}
+              onGoToProfile={(handle) => router.push(`/profile/${encodeURIComponent(handle)}`)}
             />
           ))}
         {isSelfProfile && activeTab === 'likes' && likedPosts.length === 0 && (
@@ -420,35 +441,48 @@ function ProfilePostCard({
   onToggleLike,
   onToggleRetweet,
   formatTime,
+  onGoToProfile,
 }: {
   post: Post;
   onToggleLike: () => void;
   onToggleRetweet: () => void;
   formatTime: (d: string | Date) => string;
+  onGoToProfile: (handle: string) => void;
 }) {
   const fakeViews = getFakeViewCount(post.id);
-  const router = useRouter();
-
-  const goToProfile = (handle: string) => {
-    router.push(`/profile/${encodeURIComponent(handle)}`);
-  };
 
   return (
     <article className="px-4 py-6 hover:bg-gray-950/50 transition-colors">
       <div className="flex items-start gap-3">
         <img src={post.author.avatar} alt={post.author.name} className="w-12 h-12 rounded-full flex-shrink-0 object-cover" />
         <div className="flex-1 min-w-0">
+          {/* 轉發標示：該使用者轉發的貼文 */}
+          {post.retweetedBy && (
+            <div className="flex items-center gap-2 mb-1 text-gray-500 text-[13px]">
+              <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z" />
+              </svg>
+              <button
+                type="button"
+                onClick={() => onGoToProfile(post.retweetedBy!.handle)}
+                className="hover:underline text-gray-500 hover:text-gray-300"
+              >
+                {post.retweetedBy.name}
+              </button>
+              <span>轉發了</span>
+            </div>
+          )}
           <div className="flex items-center gap-2 mb-2">
             <button
               type="button"
-              onClick={() => goToProfile(post.author.handle)}
+              onClick={() => onGoToProfile(post.author.handle)}
               className="font-bold text-gray-100 text-[15px] hover:underline text-left"
             >
               {post.author.name}
             </button>
             <button
               type="button"
-              onClick={() => goToProfile(post.author.handle)}
+              onClick={() => onGoToProfile(post.author.handle)}
               className="text-gray-500 text-[15px] hover:underline hover:text-gray-300"
             >
               {post.author.handle}

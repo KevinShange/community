@@ -186,6 +186,115 @@ export async function GET(req: Request) {
       return NextResponse.json(formattedPosts);
     }
 
+    // Profile 動態：指定使用者的發文 + 該使用者的轉發
+    const profileHandle = searchParams.get('profile');
+    if (profileHandle) {
+      const profileUser = await prisma.user.findUnique({
+        where: { handle: profileHandle },
+      });
+      if (!profileUser) {
+        return NextResponse.json([]);
+      }
+
+      const postsByUser = await prisma.post.findMany({
+        where: { authorId: profileUser.id },
+        include: {
+          author: true,
+          comments: {
+            include: { author: true },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const retweetsByUser = await prisma.postRetweet.findMany({
+        where: { userId: profileUser.id },
+        include: {
+          post: {
+            include: {
+              author: true,
+              comments: {
+                include: { author: true },
+                orderBy: { createdAt: 'asc' },
+              },
+            },
+          },
+          user: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      const feedItems: FeedItem[] = [];
+      for (const p of postsByUser) {
+        feedItems.push({ post: p, sortAt: p.createdAt });
+      }
+      for (const r of retweetsByUser) {
+        feedItems.push({
+          post: r.post,
+          sortAt: r.createdAt,
+          retweetedBy: {
+            name: r.user.name,
+            avatar: r.user.avatar,
+            handle: r.user.handle,
+          },
+          retweetedAt: r.createdAt,
+        });
+      }
+      feedItems.sort((a, b) => b.sortAt.getTime() - a.sortAt.getTime());
+
+      const allPostIds = [...new Set(feedItems.map((item) => item.post.id))];
+      const retweetCountByPostId = new Map<string, number>();
+      if (allPostIds.length) {
+        const retweets = await prisma.postRetweet.findMany({
+          where: { postId: { in: allPostIds } },
+          select: { postId: true },
+        });
+        for (const r of retweets) {
+          retweetCountByPostId.set(r.postId, (retweetCountByPostId.get(r.postId) ?? 0) + 1);
+        }
+      }
+
+      const myPostLikeIds = new Set<string>();
+      const myPostRetweetIds = new Set<string>();
+      const myCommentLikeIds = new Set<string>();
+      if (me && allPostIds.length) {
+        const commentIds = feedItems.flatMap((item) => item.post.comments.map((c) => c.id));
+        const [likes, myRetweets] = await Promise.all([
+          prisma.postLike.findMany({
+            where: { userId: me.id, postId: { in: allPostIds } },
+            select: { postId: true },
+          }),
+          prisma.postRetweet.findMany({
+            where: { userId: me.id, postId: { in: allPostIds } },
+            select: { postId: true },
+          }),
+        ]);
+        likes.forEach((l) => myPostLikeIds.add(l.postId));
+        myRetweets.forEach((r) => myPostRetweetIds.add(r.postId));
+        if (commentIds.length) {
+          const cl = await prisma.commentLike.findMany({
+            where: { userId: me.id, commentId: { in: commentIds } },
+            select: { commentId: true },
+          });
+          cl.forEach((l) => myCommentLikeIds.add(l.commentId));
+        }
+      }
+
+      const formattedProfilePosts: Post[] = feedItems.map((item) =>
+        formatPostToResponse(item.post, {
+          retweetedBy: item.retweetedBy,
+          retweetedAt: item.retweetedAt,
+          retweetCountByPostId,
+          myPostLikeIds,
+          myPostRetweetIds,
+          myCommentLikeIds,
+          me,
+        })
+      );
+      return NextResponse.json(formattedProfilePosts);
+    }
+
     // 非 following：原本邏輯（全部貼文或依作者篩選此處未用，僅查全部）
     const posts = await prisma.post.findMany({
       include: {
