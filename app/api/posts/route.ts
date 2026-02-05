@@ -6,15 +6,34 @@ import { headers } from 'next/headers';
 /**
  * GET /api/posts
  * 從資料庫查詢貼文列表
+ * Query: feed=following 時僅回傳登入使用者有 follow 的作者的貼文
  */
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const feed = searchParams.get('feed'); // 'following' | null
     const h = await headers();
     const userHandle = h.get('x-user-handle');
     const me = userHandle ? await prisma.user.findUnique({ where: { handle: userHandle } }) : null;
 
-    // 查詢所有貼文，包含作者資訊和留言
+    // Following feed：需登入，且只顯示有 follow 的作者的貼文
+    let authorIdFilter: { in: string[] } | undefined;
+    if (feed === 'following' && me) {
+      const follows = await prisma.follow.findMany({
+        where: { followerId: me.id },
+        select: { followingId: true },
+      });
+      const followingIds = follows.map((f) => f.followingId);
+      if (followingIds.length === 0) {
+        // 沒有 follow 任何人，回傳空陣列
+        return NextResponse.json([]);
+      }
+      authorIdFilter = { in: followingIds };
+    }
+
+    // 查詢貼文（可依作者篩選），包含作者資訊和留言
     const posts = await prisma.post.findMany({
+      where: authorIdFilter ? { authorId: authorIdFilter } : undefined,
       include: {
         author: true,
         comments: {

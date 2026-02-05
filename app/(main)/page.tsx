@@ -9,7 +9,7 @@ import { usePostStore } from '@/store/usePostStore';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const { posts, toggleLike } = usePostStore();
+  const { posts, feed, toggleLike } = usePostStore();
   const router = useRouter();
 
   // 格式化時間顯示
@@ -40,6 +40,11 @@ export default function Home() {
       
       {/* 內容流 */}
       <div className="divide-y divide-gray-800">
+        {feed === 'following' && posts.length === 0 && (
+          <div className="px-4 py-12 text-center text-gray-500 text-[15px]">
+            你關注的用戶尚未發文，或請先關注更多用戶以在此看到他們的動態。
+          </div>
+        )}
         {posts.map((post) => (
           <article key={post.id} className="px-4 py-6 hover:bg-gray-950/50 transition-colors">
             <div className="flex items-start gap-3">

@@ -5,9 +5,13 @@ import type { Post, Comment } from '@/types/models';
 import { createApiPostService } from '@/services/postService';
 import { useUserStore } from '@/store/useUserStore';
 
+export type FeedType = 'for-you' | 'following';
+
 /** Store 對外介面（與原本一致，UI 不需改動） */
 interface PostStoreContextType {
   posts: Post[];
+  feed: FeedType;
+  setFeed: (feed: FeedType) => void;
   toggleLike: (postId: string | number) => void;
   toggleCommentLike: (postId: string | number, commentId: string | number) => void;
   addComment: (postId: string | number, comment: Omit<Comment, 'id' | 'postId'>) => void;
@@ -18,6 +22,7 @@ const PostStoreContext = createContext<PostStoreContextType | undefined>(undefin
 
 export function PostStoreProvider({ children }: { children: ReactNode }) {
   const [posts, setPosts] = useState<Post[]>([]);
+  const [feed, setFeedState] = useState<FeedType>('for-you');
   const { currentUser } = useUserStore();
 
   const refetch = useCallback(() => {
@@ -25,11 +30,16 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
     if (currentUser?.handle) {
       headers['x-user-handle'] = currentUser.handle;
     }
-    fetch('/api/posts', { headers })
+    const url = feed === 'following' ? '/api/posts?feed=following' : '/api/posts';
+    fetch(url, { headers })
       .then((res) => res.json())
       .then((data: Post[]) => setPosts(data))
       .catch(() => setPosts([]));
-  }, [currentUser?.handle]);
+  }, [currentUser?.handle, feed]);
+
+  const setFeed = useCallback((newFeed: FeedType) => {
+    setFeedState(newFeed);
+  }, []);
 
   useEffect(() => {
     refetch();
@@ -51,6 +61,8 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
     <PostStoreContext.Provider
       value={{
         posts,
+        feed,
+        setFeed,
         toggleLike: postService.toggleLike,
         toggleCommentLike: postService.toggleCommentLike,
         addComment: postService.addComment,

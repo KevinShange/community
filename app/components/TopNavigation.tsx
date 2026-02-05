@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useUserStore } from '@/store/useUserStore';
+import { usePostStore } from '@/store/usePostStore';
 
 interface TopNavigationProps {
   variant?: 'home' | 'post-detail' | 'profile';
@@ -110,6 +111,9 @@ export default function TopNavigation({
       : `${currentUser.name} 的動態`
     : 'Home';
 
+  const { feed, setFeed } = usePostStore();
+  const isForYou = feed === 'for-you';
+
   return (
     <div className="sticky top-0 bg-gray-950/80 backdrop-blur-sm border-b border-gray-800 z-10">
       <div className="px-4">
@@ -119,14 +123,25 @@ export default function TopNavigation({
           </h1>
         </div>
         <div className="flex">
-          <button className="flex-1 relative py-3 group">
-            <span className="font-bold text-gray-100 text-[15px]">For You</span>
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500"></span>
+          <button
+            type="button"
+            onClick={() => setFeed('for-you')}
+            className="flex-1 relative py-3 group"
+          >
+            <span className={`text-[15px] ${isForYou ? 'font-bold text-gray-100' : 'text-gray-500 group-hover:text-gray-300 transition-colors'}`}>
+              For You
+            </span>
+            {isForYou && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
           </button>
-          <button className="flex-1 py-3 group">
-            <span className="text-gray-500 group-hover:text-gray-300 transition-colors text-[15px]">
+          <button
+            type="button"
+            onClick={() => setFeed('following')}
+            className="flex-1 relative py-3 group"
+          >
+            <span className={`text-[15px] ${!isForYou ? 'font-bold text-gray-100' : 'text-gray-500 group-hover:text-gray-300 transition-colors'}`}>
               Following
             </span>
+            {!isForYou && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
           </button>
         </div>
       </div>
