@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { triggerPusher } from '@/lib/pusher';
 
 type IncomingAuthor = {
   name: string;
@@ -31,7 +32,7 @@ export async function PUT(
   { params }: { params: Promise<{ postId: string; commentId: string }> }
 ) {
   try {
-    const { commentId } = await params;
+    const { postId, commentId } = await params;
     const body = (await req.json()) as { user: IncomingAuthor };
 
     if (!commentId) {
@@ -56,6 +57,16 @@ export async function PUT(
           data: { likeCount: { decrement: 1 } },
         }),
       ]);
+      const updated = await prisma.comment.findUnique({
+        where: { id: commentId },
+        select: { likeCount: true },
+      });
+      if (updated && postId) {
+        await triggerPusher(`post-${postId}`, 'comment-like-updated', {
+          commentId,
+          likeCount: updated.likeCount,
+        });
+      }
       return NextResponse.json({ liked: false });
     }
 
@@ -68,7 +79,17 @@ export async function PUT(
         data: { likeCount: { increment: 1 } },
       }),
     ]);
-
+    const updated = await prisma.comment.findUnique({
+      where: { id: commentId },
+      select: { likeCount: true },
+    });
+    if (updated && postId) {
+      await triggerPusher(`post-${postId}`, 'comment-like-updated', {
+        commentId,
+        likeCount: updated.likeCount,
+        likedBy: { name: user.name, handle: user.handle, avatar: user.avatar },
+      });
+    }
     return NextResponse.json({ liked: true });
   } catch (error) {
     console.error('Error toggling comment like:', error);

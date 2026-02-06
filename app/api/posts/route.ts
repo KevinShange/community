@@ -463,6 +463,10 @@ export async function POST(req: Request) {
       comments: [],
     };
 
+    // 即時推播：發文至 feed 頻道，讓所有用戶動態即時更新
+    const { triggerPusher } = await import('@/lib/pusher');
+    await triggerPusher('feed', 'new-post', formatted);
+
     return NextResponse.json(formatted, { status: 201 });
   } catch (error) {
     console.error('Error creating post:', error);

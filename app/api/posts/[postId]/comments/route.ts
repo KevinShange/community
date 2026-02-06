@@ -115,6 +115,16 @@ export async function POST(
       }),
     };
 
+    // 即時推播：新留言至該貼文頻道
+    const newComment = formatted.comments[formatted.comments.length - 1];
+    if (newComment) {
+      const { triggerPusher } = await import('@/lib/pusher');
+      await triggerPusher(`post-${postId}`, 'new-comment', {
+        comment: newComment,
+        postId,
+      });
+    }
+
     return NextResponse.json(formatted, { status: 201 });
   } catch (error) {
     console.error('Error creating comment:', error);

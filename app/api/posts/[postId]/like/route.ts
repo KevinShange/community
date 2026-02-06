@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { triggerPusher } from '@/lib/pusher';
 
 type IncomingAuthor = {
   name: string;
@@ -56,6 +57,15 @@ export async function PUT(
           data: { likeCount: { decrement: 1 } },
         }),
       ]);
+      const updated = await prisma.post.findUnique({
+        where: { id: postId },
+        select: { likeCount: true },
+      });
+      if (updated) {
+        await triggerPusher(`post-${postId}`, 'post-like-updated', {
+          likeCount: updated.likeCount,
+        });
+      }
       return NextResponse.json({ liked: false });
     }
 
@@ -68,7 +78,16 @@ export async function PUT(
         data: { likeCount: { increment: 1 } },
       }),
     ]);
-
+    const updated = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { likeCount: true },
+    });
+    if (updated) {
+      await triggerPusher(`post-${postId}`, 'post-like-updated', {
+        likeCount: updated.likeCount,
+        likedBy: { name: user.name, handle: user.handle, avatar: user.avatar },
+      });
+    }
     return NextResponse.json({ liked: true });
   } catch (error) {
     console.error('Error toggling post like:', error);

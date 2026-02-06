@@ -7,11 +7,19 @@ import { useUserStore } from '@/store/useUserStore';
 
 export type FeedType = 'for-you' | 'following';
 
-/** Store 對外介面（與原本一致，UI 不需改動） */
+/** 用於即時更新單一貼文（部分欄位或函式） */
+export type UpdatePostFn = (prev: Post) => Post;
+
+/** Store 對外介面（含即時推播用方法） */
 interface PostStoreContextType {
   posts: Post[];
   feed: FeedType;
   setFeed: (feed: FeedType) => void;
+  refetch: () => void;
+  /** 依 postId 更新 store 中的貼文（供 Pusher 即時更新使用） */
+  updatePostById: (postId: string | number, update: Partial<Post> | UpdatePostFn) => void;
+  /** 從即時推播新增一則貼文到列表頂部（避免重複） */
+  prependPostFromRealtime: (post: Post) => void;
   toggleLike: (postId: string | number) => void;
   toggleRetweet: (postId: string | number) => void;
   toggleCommentLike: (postId: string | number, commentId: string | number) => void;
@@ -47,6 +55,23 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
     refetch();
   }, [refetch]);
 
+  const updatePostById = useCallback((postId: string | number, update: Partial<Post> | UpdatePostFn) => {
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (String(p.id) !== String(postId)) return p;
+        return typeof update === 'function' ? update(p) : { ...p, ...update };
+      })
+    );
+  }, []);
+
+  const prependPostFromRealtime = useCallback((post: Post) => {
+    setPosts((prev) => {
+      const exists = prev.some((p) => String(p.id) === String(post.id));
+      if (exists) return prev;
+      return [post, ...prev];
+    });
+  }, []);
+
   const postService = useMemo(() => {
     if (!currentUser) {
       return {
@@ -67,6 +92,9 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         posts,
         feed,
         setFeed,
+        refetch,
+        updatePostById,
+        prependPostFromRealtime,
         toggleLike: postService.toggleLike,
         toggleRetweet: postService.toggleRetweet,
         toggleCommentLike: postService.toggleCommentLike,
