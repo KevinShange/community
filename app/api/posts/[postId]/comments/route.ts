@@ -76,7 +76,9 @@ export async function POST(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
-    const postImageUrls = Array.isArray(post.imageUrls) ? post.imageUrls : [];
+    const postImageUrls: string[] = Array.isArray(post.imageUrls)
+      ? post.imageUrls.filter((u): u is string => typeof u === 'string')
+      : [];
     const formatted: Post = {
       id: post.id,
       author: {
@@ -93,7 +95,9 @@ export async function POST(
       retweetCount: post.retweetCount ?? 0,
       isRetweetedByMe: false,
       comments: post.comments.map((c) => {
-        const commentImageUrls = Array.isArray(c.imageUrls) ? c.imageUrls : [];
+        const commentImageUrls: string[] = Array.isArray(c.imageUrls)
+          ? c.imageUrls.filter((u): u is string => typeof u === 'string')
+          : [];
         return {
           id: c.id,
           postId: post.id,

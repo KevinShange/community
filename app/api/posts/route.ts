@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import type { Post } from '@/types/models';
 import { headers } from 'next/headers';
 
+/** 與實際查詢一致：含 author、comments（含 comment.author） */
+type PostWithRelations = Prisma.PostGetPayload<{
+  include: { author: true; comments: { include: { author: true } } };
+}>;
+
 type FeedItem = {
-  post: Awaited<ReturnType<typeof prisma.post.findMany>>[number];
+  post: PostWithRelations;
   sortAt: Date;
   retweetedBy?: { name: string; avatar: string | null; handle: string };
   retweetedAt?: Date;
@@ -23,7 +29,9 @@ function formatPostToResponse(
   }
 ): Post {
   const avatar = post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.handle}`;
-  const postImageUrls = Array.isArray(post.imageUrls) ? post.imageUrls : [];
+  const postImageUrls: string[] = Array.isArray(post.imageUrls)
+    ? post.imageUrls.filter((u): u is string => typeof u === 'string')
+    : [];
   const base: Post = {
     id: post.id,
     author: {
@@ -40,7 +48,9 @@ function formatPostToResponse(
     retweetCount: opts.retweetCountByPostId.get(post.id) ?? post.retweetCount ?? 0,
     isRetweetedByMe: opts.me ? opts.myPostRetweetIds.has(post.id) : false,
     comments: post.comments.map((comment) => {
-      const commentImageUrls = Array.isArray(comment.imageUrls) ? comment.imageUrls : [];
+      const commentImageUrls: string[] = Array.isArray(comment.imageUrls)
+        ? comment.imageUrls.filter((u): u is string => typeof u === 'string')
+        : [];
       return {
         id: comment.id,
         postId: post.id,
@@ -430,7 +440,9 @@ export async function POST(req: Request) {
       },
     });
 
-    const createdImageUrls = Array.isArray(created.imageUrls) ? created.imageUrls : [];
+    const createdImageUrls: string[] = Array.isArray(created.imageUrls)
+      ? created.imageUrls.filter((u): u is string => typeof u === 'string')
+      : [];
     const formatted: Post = {
       id: created.id,
       author: {

@@ -17,7 +17,9 @@ interface ApiClient {
   post: (path: string, body: unknown) => Promise<{ data: Post }>;
   postComment: (postId: PostId, body: unknown) => Promise<{ data: Post }>;
   putLike: (postId: PostId) => Promise<void>;
+  putRetweet: (postId: PostId) => Promise<{ retweeted: boolean }>;
   putCommentLike: (postId: PostId, commentId: PostId) => Promise<void>;
+  delete: (postId: PostId) => Promise<void>;
 }
 
 export function createApiPostService(
@@ -69,6 +71,29 @@ export function createApiPostService(
             };
           })
         );
+      });
+    },
+    toggleRetweet(postId: PostId) {
+      api.putRetweet(postId).then(({ retweeted }) => {
+        updatePosts((prev) =>
+          prev.map((p) => {
+            if (p.id !== postId) return p;
+            const wasRetweeted = p.isRetweetedByMe;
+            const nextCount =
+              retweeted === wasRetweeted
+                ? p.retweetCount
+                : retweeted
+                  ? p.retweetCount + 1
+                  : Math.max(0, p.retweetCount - 1);
+            return { ...p, isRetweetedByMe: retweeted, retweetCount: nextCount };
+          })
+        );
+      });
+    },
+    deletePost(postId: PostId) {
+      updatePosts((prev) => prev.filter((p) => p.id !== postId));
+      api.delete(postId).catch(() => {
+        updatePosts((prev) => [...prev]); // 失敗時可選擇還原
       });
     },
   };

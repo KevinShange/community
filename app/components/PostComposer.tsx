@@ -21,7 +21,7 @@ export default function PostComposer() {
   };
 
   const handleSubmitPost = () => {
-    if (!content.trim() || counted > MAX_POST_LENGTH) return;
+    if (!currentUser || !content.trim() || counted > MAX_POST_LENGTH) return;
     addPost({
       author: currentUser,
       content: content.trim(),
