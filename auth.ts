@@ -143,11 +143,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
       return token;
     },
-    session({ session, token }) {
-      if (session.user) {
+    async session({ session, token }) {
+      if (session.user && token.handle) {
         session.user.id = token.id as string;
         (session.user as { handle?: string }).handle = token.handle as string;
         (session.user as { loginType?: string }).loginType = (token as { loginType?: string }).loginType as "email" | "oauth";
+        // 從 DB 取得最新名稱與頭像，讓編輯個人檔案後發文框等處能顯示更新後的頭像
+        const user = await prisma.user.findUnique({
+          where: { handle: token.handle as string },
+          select: { name: true, avatar: true },
+        });
+        if (user) {
+          session.user.name = user.name;
+          session.user.image = user.avatar ?? session.user.image ?? null;
+        }
       }
       return session;
     },
