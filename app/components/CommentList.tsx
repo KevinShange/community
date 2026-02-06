@@ -4,6 +4,7 @@ import type { Comment } from '@/types/models';
 import { useRouter } from 'next/navigation';
 import { usePostStore } from '@/store/usePostStore';
 import ContentWithLinks from './ContentWithLinks';
+import PostImages from './PostImages';
 
 interface CommentListProps {
   postId: string | number;
@@ -79,6 +80,11 @@ export default function CommentList({ postId, comments }: CommentListProps) {
               <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                 <ContentWithLinks content={comment.content} />
               </p>
+              {comment.imageUrls && comment.imageUrls.length > 0 && (
+                <div className="mt-2">
+                  <PostImages imageUrls={comment.imageUrls} maxHeight="200px" />
+                </div>
+              )}
             </div>
             
             {/* 操作列 */}

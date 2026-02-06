@@ -102,9 +102,17 @@ export async function PATCH(req: Request) {
       name?: string;
       bio?: string;
       birthday?: string | null;
+      avatar?: string | null;
+      coverImage?: string | null;
     };
 
-    const data: { name?: string; bio?: string | null; birthday?: Date | null } = {};
+    const data: {
+      name?: string;
+      bio?: string | null;
+      birthday?: Date | null;
+      avatar?: string | null;
+      coverImage?: string | null;
+    } = {};
 
     if (typeof body.name === 'string') {
       const trimmed = body.name.trim();
@@ -121,6 +129,12 @@ export async function PATCH(req: Request) {
         if (!Number.isNaN(d.getTime())) data.birthday = d;
       }
     }
+    if (body.avatar !== undefined) {
+      data.avatar = typeof body.avatar === 'string' ? body.avatar.trim() || null : null;
+    }
+    if (body.coverImage !== undefined) {
+      data.coverImage = typeof body.coverImage === 'string' ? body.coverImage.trim() || null : null;
+    }
 
     const updated = await prisma.user.update({
       where: { id: user.id },
@@ -129,6 +143,8 @@ export async function PATCH(req: Request) {
         name: true,
         bio: true,
         birthday: true,
+        avatar: true,
+        coverImage: true,
       },
     });
 
@@ -136,6 +152,8 @@ export async function PATCH(req: Request) {
       name: updated.name,
       bio: updated.bio ?? '',
       birthday: updated.birthday ? updated.birthday.toISOString().slice(0, 10) : null,
+      avatar: updated.avatar ?? null,
+      coverImage: updated.coverImage ?? null,
     });
   } catch (error) {
     console.error('Error updating profile:', error);

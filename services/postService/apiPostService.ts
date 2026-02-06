@@ -29,6 +29,7 @@ export function createApiPostService(
         id: TEMP_POST_ID,
         author: payload.author,
         content: payload.content,
+        imageUrls: payload.imageUrls,
         createdAt: new Date().toISOString(),
         likeCount: 0,
         isLikedByMe: false,
@@ -45,6 +46,7 @@ export function createApiPostService(
         body: JSON.stringify({
           author: payload.author,
           content: payload.content,
+          imageUrls: payload.imageUrls,
         }),
       })
         .then((data) => {
@@ -62,6 +64,7 @@ export function createApiPostService(
         postId,
         author: payload.author,
         content: payload.content,
+        imageUrls: payload.imageUrls,
         createdAt: payload.createdAt instanceof Date ? payload.createdAt.toISOString() : payload.createdAt,
         likeCount: 0,
         isLikedByMe: false,
@@ -83,6 +86,7 @@ export function createApiPostService(
         body: JSON.stringify({
           author: payload.author,
           content: payload.content,
+          imageUrls: payload.imageUrls,
         }),
       })
         .then((data) => {

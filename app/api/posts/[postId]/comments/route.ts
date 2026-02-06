@@ -33,7 +33,11 @@ export async function POST(
 ) {
   try {
     const { postId } = await params;
-    const body = (await req.json()) as { author: IncomingAuthor; content: string };
+    const body = (await req.json()) as {
+      author: IncomingAuthor;
+      content: string;
+      imageUrls?: string[];
+    };
 
     if (!postId) {
       return NextResponse.json({ error: 'Missing postId' }, { status: 400 });
@@ -44,6 +48,7 @@ export async function POST(
     if (!body?.content?.trim()) {
       return NextResponse.json({ error: 'Missing content' }, { status: 400 });
     }
+    const imageUrls = Array.isArray(body.imageUrls) ? body.imageUrls.filter((u) => typeof u === 'string') : [];
 
     const user = await getOrCreateUser(body.author);
 
@@ -52,6 +57,7 @@ export async function POST(
         post: { connect: { id: postId } },
         author: { connect: { id: user.id } },
         content: body.content.trim(),
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       },
     });
 
@@ -70,6 +76,7 @@ export async function POST(
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
+    const postImageUrls = Array.isArray(post.imageUrls) ? post.imageUrls : [];
     const formatted: Post = {
       id: post.id,
       author: {
@@ -78,25 +85,30 @@ export async function POST(
         handle: post.author.handle,
       },
       content: post.content,
+      imageUrls: postImageUrls.length > 0 ? postImageUrls : undefined,
       createdAt: post.createdAt.toISOString(),
       likeCount: post.likeCount,
       isLikedByMe: false, // 由前端 optimistic 更新；完整狀態請用 GET /api/posts（帶 x-user-handle）
       replyCount: post.comments.length,
       retweetCount: post.retweetCount ?? 0,
       isRetweetedByMe: false,
-      comments: post.comments.map((c) => ({
-        id: c.id,
-        postId: post.id,
-        author: {
-          name: c.author.name,
-          avatar: c.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.handle}`,
-          handle: c.author.handle,
-        },
-        content: c.content,
-        createdAt: c.createdAt.toISOString(),
-        likeCount: c.likeCount,
-        isLikedByMe: false,
-      })),
+      comments: post.comments.map((c) => {
+        const commentImageUrls = Array.isArray(c.imageUrls) ? c.imageUrls : [];
+        return {
+          id: c.id,
+          postId: post.id,
+          author: {
+            name: c.author.name,
+            avatar: c.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.author.handle}`,
+            handle: c.author.handle,
+          },
+          content: c.content,
+          imageUrls: commentImageUrls.length > 0 ? commentImageUrls : undefined,
+          createdAt: c.createdAt.toISOString(),
+          likeCount: c.likeCount,
+          isLikedByMe: false,
+        };
+      }),
     };
 
     return NextResponse.json(formatted, { status: 201 });

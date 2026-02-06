@@ -55,6 +55,7 @@ model Post {
   authorId     String   @db.ObjectId
   author       User     @relation(fields: [authorId], references: [id])
   content      String
+  imageUrls    Json?    // string[] from Cloudinary
   likeCount    Int      @default(0)
   retweetCount Int      @default(0)
   createdAt    DateTime @default(now())
@@ -75,6 +76,7 @@ model Comment {
   authorId  String   @db.ObjectId
   author    User     @relation(fields: [authorId], references: [id])
   content   String
+  imageUrls Json?    // string[] from Cloudinary
   likeCount Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

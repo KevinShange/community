@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export interface EditProfileFormValues {
   name: string;
   bio: string;
   birthday: string;
+  coverImage?: string | null;
+  avatar?: string | null;
 }
 
 interface EditProfileModalProps {
@@ -13,7 +15,13 @@ interface EditProfileModalProps {
   onClose: () => void;
   initialValues: EditProfileFormValues;
   userHandle: string;
-  onSuccess?: (updated: { name: string; bio: string; birthday: string | null }) => void;
+  onSuccess?: (updated: {
+    name: string;
+    bio: string;
+    birthday: string | null;
+    coverImage?: string | null;
+    avatar?: string | null;
+  }) => void;
 }
 
 function getProfileHeaders(handle: string): HeadersInit {
@@ -30,17 +38,68 @@ export default function EditProfileModal({
   const [name, setName] = useState(initialValues.name);
   const [bio, setBio] = useState(initialValues.bio);
   const [birthday, setBirthday] = useState(initialValues.birthday);
+  const [coverImage, setCoverImage] = useState<string | null>(initialValues.coverImage ?? null);
+  const [avatar, setAvatar] = useState<string | null>(initialValues.avatar ?? null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setName(initialValues.name);
       setBio(initialValues.bio);
       setBirthday(initialValues.birthday);
+      setCoverImage(initialValues.coverImage ?? null);
+      setAvatar(initialValues.avatar ?? null);
       setError(null);
     }
-  }, [isOpen, initialValues.name, initialValues.bio, initialValues.birthday]);
+  }, [isOpen, initialValues.name, initialValues.bio, initialValues.birthday, initialValues.coverImage, initialValues.avatar]);
+
+  async function uploadFile(file: File, folder: string): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+    const res = await fetch('/api/upload/cloudinary', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    return data.url;
+  }
+
+  const handleCoverChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setUploadingCover(true);
+    try {
+      const url = await uploadFile(file, 'profile/cover');
+      setCoverImage(url);
+    } catch {
+      setError('背景圖上傳失敗');
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setUploadingAvatar(true);
+    try {
+      const url = await uploadFile(file, 'profile/avatar');
+      setAvatar(url);
+    } catch {
+      setError('大頭貼上傳失敗');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -56,6 +115,8 @@ export default function EditProfileModal({
           name: name.trim(),
           bio: bio.trim() || null,
           birthday: birthday.trim() || null,
+          coverImage: coverImage || null,
+          avatar: avatar || null,
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -67,6 +128,8 @@ export default function EditProfileModal({
         name: data.name ?? name.trim(),
         bio: data.bio ?? bio.trim(),
         birthday: data.birthday ?? (birthday.trim() || null),
+        coverImage: data.coverImage ?? coverImage ?? null,
+        avatar: data.avatar ?? avatar ?? null,
       });
       onClose();
     } catch {
@@ -114,16 +177,66 @@ export default function EditProfileModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          {/* 預留：更換背景圖（之後實作） */}
-          <div className="rounded-xl border border-dashed border-gray-700 p-6 text-center bg-gray-900/50">
-            <p className="text-gray-500 text-sm">更換背景圖</p>
-            <p className="text-gray-600 text-xs mt-1">（功能預留，之後實作）</p>
+          {/* 更換背景圖 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">背景圖</label>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={handleCoverChange}
+            />
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              disabled={uploadingCover}
+              className="w-full rounded-xl border border-dashed border-gray-700 p-6 text-center bg-gray-900/50 hover:bg-gray-800/50 hover:border-gray-600 transition-colors disabled:opacity-60"
+            >
+              {coverImage ? (
+                <div className="relative h-32 -m-2 rounded-lg overflow-hidden bg-gray-800">
+                  <img src={coverImage} alt="封面預覽" className="w-full h-full object-cover" />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition-opacity text-gray-100 text-sm">
+                    {uploadingCover ? '上傳中…' : '點擊更換'}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <p className="text-gray-500 text-sm">{uploadingCover ? '上傳中…' : '更換背景圖'}</p>
+                  <p className="text-gray-600 text-xs mt-1">JPEG、PNG、GIF、WebP，最大 5MB</p>
+                </>
+              )}
+            </button>
           </div>
 
-          {/* 預留：更換大頭貼（之後實作） */}
-          <div className="rounded-xl border border-dashed border-gray-700 p-6 text-center bg-gray-900/50">
-            <p className="text-gray-500 text-sm">更換大頭貼</p>
-            <p className="text-gray-600 text-xs mt-1">（功能預留，之後實作）</p>
+          {/* 更換大頭貼 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-400 mb-1">大頭貼</label>
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/gif,image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <button
+              type="button"
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={uploadingAvatar}
+              className="flex items-center gap-4 rounded-xl border border-dashed border-gray-700 p-4 bg-gray-900/50 hover:bg-gray-800/50 hover:border-gray-600 transition-colors disabled:opacity-60"
+            >
+              <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-800 flex-shrink-0 border-2 border-gray-700">
+                {avatar ? (
+                  <img src={avatar} alt="大頭貼預覽" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-600 text-2xl">?</div>
+                )}
+              </div>
+              <div className="text-left">
+                <p className="text-gray-400 text-sm">{uploadingAvatar ? '上傳中…' : '點擊更換大頭貼'}</p>
+                <p className="text-gray-600 text-xs mt-0.5">JPEG、PNG、GIF、WebP，最大 5MB</p>
+              </div>
+            </button>
           </div>
 
           <div>

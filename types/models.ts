@@ -24,6 +24,8 @@ export interface Comment {
   postId: string | number;
   author: Author;
   content: string;
+  /** 圖片 URL 陣列（Cloudinary） */
+  imageUrls?: string[];
   createdAt: string | Date;
   likeCount: number;
   isLikedByMe: boolean;
@@ -37,6 +39,8 @@ export interface Post {
   id: string | number;
   author: Author;
   content: string;
+  /** 圖片 URL 陣列（Cloudinary） */
+  imageUrls?: string[];
   createdAt: string | Date;
   likeCount: number;
   isLikedByMe: boolean;

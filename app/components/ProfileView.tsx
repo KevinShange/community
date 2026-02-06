@@ -6,6 +6,7 @@ import TopNavigation from './TopNavigation';
 import ContentWithLinks from './ContentWithLinks';
 import EditProfileModal from './EditProfileModal';
 import PostMenuDropdown from './PostMenuDropdown';
+import PostImages from './PostImages';
 import { useUserStore } from '@/store/useUserStore';
 import { usePostStore } from '@/store/usePostStore';
 import type { Post, Author } from '@/types/models';
@@ -414,6 +415,8 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
             name: profileData?.name ?? loggedInUser.name,
             bio: profileData?.bio ?? '',
             birthday: profileData?.birthday ?? '',
+            coverImage: profileData?.coverImage ?? null,
+            avatar: profileData?.avatar ?? loggedInUser.avatar ?? null,
           }}
           userHandle={loggedInUser.handle}
           onSuccess={(updated) => {
@@ -424,17 +427,26 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
                     name: updated.name,
                     bio: updated.bio,
                     birthday: updated.birthday,
+                    coverImage: updated.coverImage ?? prev.coverImage,
+                    avatar: updated.avatar ?? prev.avatar,
                   }
                 : {
                     name: updated.name,
                     bio: updated.bio,
-                    birthday: updated.birthday,
-                    coverImage: null,
+                    birthday: updated.birthday ?? null,
+                    coverImage: updated.coverImage ?? null,
                     joinedAt: new Date().toISOString(),
-                    avatar: loggedInUser.avatar ?? null,
+                    avatar: updated.avatar ?? loggedInUser.avatar ?? null,
+                    followingCount: 0,
+                    followersCount: 0,
+                    isFollowing: false,
                   },
             );
-            setCurrentUser({ ...loggedInUser, name: updated.name });
+            setCurrentUser({
+              ...loggedInUser,
+              name: updated.name,
+              avatar: updated.avatar ?? loggedInUser.avatar ?? '',
+            });
           }}
         />
       )}
@@ -519,6 +531,11 @@ function ProfilePostCard({
             <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
               <ContentWithLinks content={post.content} />
             </p>
+            {post.imageUrls && post.imageUrls.length > 0 && (
+              <div className="mt-2">
+                <PostImages imageUrls={post.imageUrls} maxHeight="280px" />
+              </div>
+            )}
           </button>
           {/* 操作列：阻止點擊冒泡 */}
           <div className="flex items-center justify-between max-w-md mt-4" onClick={(e) => e.stopPropagation()}>

@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import TopNavigation from '../../../components/TopNavigation';
 import ContentWithLinks from '../../../components/ContentWithLinks';
 import PostMenuDropdown from '../../../components/PostMenuDropdown';
+import PostImages from '../../../components/PostImages';
 import ReplyComposer from '../../../components/ReplyComposer';
 import CommentList from '../../../components/CommentList';
 import { usePostStore } from '@/store/usePostStore';
@@ -107,6 +108,11 @@ export default function PostDetailPage() {
               <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                 <ContentWithLinks content={post.content} />
               </p>
+              {post.imageUrls && post.imageUrls.length > 0 && (
+                <div className="mt-2">
+                  <PostImages imageUrls={post.imageUrls} maxHeight="320px" />
+                </div>
+              )}
             </div>
             <div className="mb-4">
               <div className="flex items-center gap-2 text-gray-500 text-[15px] mb-3">

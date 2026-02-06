@@ -4,6 +4,7 @@ import TopNavigation from '../components/TopNavigation';
 import PostComposer from '../components/PostComposer';
 import ContentWithLinks from '../components/ContentWithLinks';
 import PostMenuDropdown from '../components/PostMenuDropdown';
+import PostImages from '../components/PostImages';
 import { usePostStore } from '@/store/usePostStore';
 import { useUserStore } from '@/store/useUserStore';
 import { useRouter } from 'next/navigation';
@@ -113,6 +114,11 @@ export default function Home() {
                   <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                     <ContentWithLinks content={post.content} />
                   </p>
+                  {post.imageUrls && post.imageUrls.length > 0 && (
+                    <div className="mt-2">
+                      <PostImages imageUrls={post.imageUrls} maxHeight="280px" />
+                    </div>
+                  )}
                 </button>
                 
                 {/* 操作列：阻止點擊冒泡，避免觸發轉跳 */}

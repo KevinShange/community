@@ -23,6 +23,7 @@ function formatPostToResponse(
   }
 ): Post {
   const avatar = post.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.author.handle}`;
+  const postImageUrls = Array.isArray(post.imageUrls) ? post.imageUrls : [];
   const base: Post = {
     id: post.id,
     author: {
@@ -31,25 +32,30 @@ function formatPostToResponse(
       handle: post.author.handle,
     },
     content: post.content,
+    imageUrls: postImageUrls.length > 0 ? postImageUrls : undefined,
     createdAt: post.createdAt.toISOString(),
     likeCount: post.likeCount,
     isLikedByMe: opts.me ? opts.myPostLikeIds.has(post.id) : false,
     replyCount: post.comments.length,
     retweetCount: opts.retweetCountByPostId.get(post.id) ?? post.retweetCount ?? 0,
     isRetweetedByMe: opts.me ? opts.myPostRetweetIds.has(post.id) : false,
-    comments: post.comments.map((comment) => ({
-      id: comment.id,
-      postId: post.id,
-      author: {
-        name: comment.author.name,
-        avatar: comment.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.handle}`,
-        handle: comment.author.handle,
-      },
-      content: comment.content,
-      createdAt: comment.createdAt.toISOString(),
-      likeCount: comment.likeCount,
-      isLikedByMe: opts.me ? opts.myCommentLikeIds.has(comment.id) : false,
-    })),
+    comments: post.comments.map((comment) => {
+      const commentImageUrls = Array.isArray(comment.imageUrls) ? comment.imageUrls : [];
+      return {
+        id: comment.id,
+        postId: post.id,
+        author: {
+          name: comment.author.name,
+          avatar: comment.author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${comment.author.handle}`,
+          handle: comment.author.handle,
+        },
+        content: comment.content,
+        imageUrls: commentImageUrls.length > 0 ? commentImageUrls : undefined,
+        createdAt: comment.createdAt.toISOString(),
+        likeCount: comment.likeCount,
+        isLikedByMe: opts.me ? opts.myCommentLikeIds.has(comment.id) : false,
+      };
+    }),
   };
   if (opts.retweetedBy) {
     base.retweetedBy = {
@@ -394,19 +400,25 @@ async function getOrCreateUser(author: IncomingAuthor) {
  */
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as { author: IncomingAuthor; content: string };
+    const body = (await req.json()) as {
+      author: IncomingAuthor;
+      content: string;
+      imageUrls?: string[];
+    };
     if (!body?.author?.handle || !body?.author?.name) {
       return NextResponse.json({ error: 'Missing author' }, { status: 400 });
     }
     if (!body?.content?.trim()) {
       return NextResponse.json({ error: 'Missing content' }, { status: 400 });
     }
+    const imageUrls = Array.isArray(body.imageUrls) ? body.imageUrls.filter((u) => typeof u === 'string') : [];
 
     const user = await getOrCreateUser(body.author);
 
     const created = await prisma.post.create({
       data: {
         content: body.content.trim(),
+        imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         author: { connect: { id: user.id } },
       },
       include: {
@@ -418,6 +430,7 @@ export async function POST(req: Request) {
       },
     });
 
+    const createdImageUrls = Array.isArray(created.imageUrls) ? created.imageUrls : [];
     const formatted: Post = {
       id: created.id,
       author: {
@@ -428,6 +441,7 @@ export async function POST(req: Request) {
         handle: created.author.handle,
       },
       content: created.content,
+      imageUrls: createdImageUrls.length > 0 ? createdImageUrls : undefined,
       createdAt: created.createdAt.toISOString(),
       likeCount: created.likeCount,
       isLikedByMe: false,

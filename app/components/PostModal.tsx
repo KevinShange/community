@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { usePostStore } from '@/store/usePostStore';
 import { useUserStore } from '@/store/useUserStore';
 import { getCountedLength, truncateToCounted, MAX_POST_LENGTH } from '@/lib/postUtils';
+import ComposerImageUpload from './ComposerImageUpload';
 
 interface PostModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ function getDraftsHeaders(handle: string): HeadersInit {
 
 export default function PostModal({ isOpen, onClose }: PostModalProps) {
   const [content, setContent] = useState('');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [showDiscardConfirm, setShowDiscardConfirm] = useState(false);
   const [showDraftsView, setShowDraftsView] = useState(false);
   const [drafts, setDrafts] = useState<DraftItem[]>([]);
@@ -60,7 +62,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
 
   const counted = getCountedLength(content);
   const canSubmit = content.trim().length > 0 && counted <= MAX_POST_LENGTH;
-  const hasContent = content.trim().length > 0;
+  const hasContent = content.trim().length > 0 || imageUrls.length > 0;
 
   const handleContentChange = (value: string) => {
     setContent(truncateToCounted(value, MAX_POST_LENGTH));
@@ -81,6 +83,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
   const handleDiscard = () => {
     setShowDiscardConfirm(false);
     setContent('');
+    setImageUrls([]);
     onClose();
   };
 
@@ -96,12 +99,13 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
       if (res.ok) {
         setShowDiscardConfirm(false);
         setContent('');
+        setImageUrls([]);
         onClose();
       }
     } catch {
-      // 儲存失敗可選擇保留在視窗或仍關閉，此處選擇關閉
       setShowDiscardConfirm(false);
       setContent('');
+      setImageUrls([]);
       onClose();
     }
   };
@@ -111,8 +115,10 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
     addPost({
       author: currentUser,
       content: content.trim(),
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
     });
     setContent('');
+    setImageUrls([]);
     onClose();
   };
 
@@ -262,15 +268,11 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <button
-                        type="button"
-                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors"
-                        aria-hidden="true"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z" />
-                        </svg>
-                      </button>
+                      <ComposerImageUpload
+                        imageUrls={imageUrls}
+                        onChange={setImageUrls}
+                        label="新增圖片"
+                      />
                       <button
                         type="button"
                         className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors"

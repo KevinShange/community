@@ -5,6 +5,7 @@ import { usePostStore } from '@/store/usePostStore';
 import { useUserStore } from '@/store/useUserStore';
 import { getCountedLength, truncateToCounted, MAX_POST_LENGTH } from '@/lib/postUtils';
 import HighlightedTextarea from './HighlightedTextarea';
+import ComposerImageUpload from './ComposerImageUpload';
 
 interface ReplyComposerProps {
   postId: string | number;
@@ -15,6 +16,7 @@ interface ReplyComposerProps {
  */
 export default function ReplyComposer({ postId }: ReplyComposerProps) {
   const [content, setContent] = useState('');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const { addComment } = usePostStore();
   const { currentUser } = useUserStore();
 
@@ -30,11 +32,13 @@ export default function ReplyComposer({ postId }: ReplyComposerProps) {
     addComment(postId, {
       author: currentUser,
       content: content.trim(),
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       createdAt: new Date().toISOString(),
       likeCount: 0,
       isLikedByMe: false,
     });
     setContent('');
+    setImageUrls([]);
   };
 
   if (!currentUser) return null;
@@ -59,11 +63,11 @@ export default function ReplyComposer({ postId }: ReplyComposerProps) {
           </div>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors" type="button" aria-label="圖片">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5.04-6.71l-2.75 3.54-1.96-2.36L6.5 17h11l-3.54-4.71z"/>
-                </svg>
-              </button>
+              <ComposerImageUpload
+                imageUrls={imageUrls}
+                onChange={setImageUrls}
+                label="新增圖片"
+              />
               <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors" type="button" aria-label="GIF">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M11.5 9H13v6h-1.5zM9 9H6c-.6 0-1 .5-1 1v4c0 .5.4 1 1 1h3c.6 0 1-.5 1-1v-2H8.5v1.5h-2v-3H10V10c0-.5-.4-1-1-1zm10 1.5V9h-4.5v6H16v-2h2v-1.5h-2v-1z"/>
