@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 import type { Post } from '@/types/models';
 import { headers } from 'next/headers';
+import { createPostSchema } from '@/lib/schemas';
 
 /** 與實際查詢一致：含 author、comments（含 comment.author） */
 type PostWithRelations = Prisma.PostGetPayload<{
@@ -410,24 +411,27 @@ async function getOrCreateUser(author: IncomingAuthor) {
  */
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as {
-      author: IncomingAuthor;
-      content: string;
-      imageUrls?: string[];
-    };
-    if (!body?.author?.handle || !body?.author?.name) {
-      return NextResponse.json({ error: 'Missing author' }, { status: 400 });
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
-    if (!body?.content?.trim()) {
-      return NextResponse.json({ error: 'Missing content' }, { status: 400 });
+    const parsed = createPostSchema.safeParse(body);
+    if (!parsed.success) {
+      const msg = parsed.error.flatten().formErrors[0]
+        ?? parsed.error.flatten().fieldErrors.content?.[0]
+        ?? parsed.error.flatten().fieldErrors.author?.[0]
+        ?? 'Invalid request body';
+      return NextResponse.json({ error: msg }, { status: 400 });
     }
-    const imageUrls = Array.isArray(body.imageUrls) ? body.imageUrls.filter((u) => typeof u === 'string') : [];
+    const { author, content, imageUrls } = parsed.data;
 
-    const user = await getOrCreateUser(body.author);
+    const user = await getOrCreateUser(author);
 
     const created = await prisma.post.create({
       data: {
-        content: body.content.trim(),
+        content,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
         author: { connect: { id: user.id } },
       },

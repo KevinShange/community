@@ -5,6 +5,7 @@ import Facebook from "next-auth/providers/facebook";
 import GitHub from "next-auth/providers/github";
 import { compare } from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { loginInputSchema } from "@/lib/schemas";
 
 /** 為 OAuth 使用者產生唯一 handle：基底字 + 登入方式識別，避免與既有用戶重複 */
 async function getUniqueHandle(base: string): Promise<string> {
@@ -87,13 +88,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
-        const email = String(credentials.email).trim().toLowerCase();
+        const parsed = loginInputSchema.safeParse({
+          email: credentials?.email ?? "",
+          password: credentials?.password ?? "",
+        });
+        if (!parsed.success) return null;
+        const { email } = parsed.data;
         const user = await prisma.user.findFirst({
           where: { email, password: { not: null } },
         });
         if (!user?.password) return null;
-        const ok = await compare(String(credentials.password), user.password);
+        const ok = await compare(parsed.data.password, user.password);
         if (!ok) return null;
         return {
           id: user.id,

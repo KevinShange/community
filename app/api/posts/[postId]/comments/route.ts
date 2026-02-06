@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { Post } from '@/types/models';
+import { createReplySchema } from '@/lib/schemas';
 
 type IncomingAuthor = {
   name: string;
@@ -33,30 +34,34 @@ export async function POST(
 ) {
   try {
     const { postId } = await params;
-    const body = (await req.json()) as {
-      author: IncomingAuthor;
-      content: string;
-      imageUrls?: string[];
-    };
 
     if (!postId) {
       return NextResponse.json({ error: 'Missing postId' }, { status: 400 });
     }
-    if (!body?.author?.handle || !body?.author?.name) {
-      return NextResponse.json({ error: 'Missing author' }, { status: 400 });
-    }
-    if (!body?.content?.trim()) {
-      return NextResponse.json({ error: 'Missing content' }, { status: 400 });
-    }
-    const imageUrls = Array.isArray(body.imageUrls) ? body.imageUrls.filter((u) => typeof u === 'string') : [];
 
-    const user = await getOrCreateUser(body.author);
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
+    const parsed = createReplySchema.safeParse(body);
+    if (!parsed.success) {
+      const msg = parsed.error.flatten().formErrors[0]
+        ?? parsed.error.flatten().fieldErrors.content?.[0]
+        ?? parsed.error.flatten().fieldErrors.author?.[0]
+        ?? 'Invalid request body';
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+    const { author, content, imageUrls } = parsed.data;
+
+    const user = await getOrCreateUser(author);
 
     await prisma.comment.create({
       data: {
         post: { connect: { id: postId } },
         author: { connect: { id: user.id } },
-        content: body.content.trim(),
+        content,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       },
     });

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { signIn } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
+import { loginInputSchema } from '@/lib/schemas';
 
 export default function LoginForm() {
   const router = useRouter();
@@ -36,11 +37,20 @@ export default function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    const parsed = loginInputSchema.safeParse({ email, password });
+    if (!parsed.success) {
+      const first = parsed.error.flatten().fieldErrors;
+      const msg = first.email?.[0] ?? first.password?.[0] ?? '請檢查輸入欄位';
+      setError(msg);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await signIn('credentials', {
-        email: email.trim().toLowerCase(),
-        password,
+        email: parsed.data.email,
+        password: parsed.data.password,
         redirect: false,
       });
       if (res?.error) {
