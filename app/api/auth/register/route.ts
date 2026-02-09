@@ -5,10 +5,11 @@ import { prisma } from "@/lib/prisma";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name } = body as {
+    const { email, password, name, birthday } = body as {
       email?: string;
       password?: string;
       name?: string;
+      birthday?: string; // YYYY-MM-DD
     };
     const trimmedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (!trimmedEmail || !password || password.length < 6) {
@@ -31,12 +32,18 @@ export async function POST(req: Request) {
     }
     const hashedPassword = await hash(password, 10);
     const displayName = ((typeof name === "string" && name.trim()) || trimmedEmail.split("@")[0]) ?? "User";
+    let birthdayDate: Date | null = null;
+    if (typeof birthday === "string" && birthday.trim()) {
+      const d = new Date(birthday.trim());
+      if (!Number.isNaN(d.getTime())) birthdayDate = d;
+    }
     await prisma.user.create({
       data: {
         email: trimmedEmail,
         password: hashedPassword,
         name: displayName,
         handle,
+        ...(birthdayDate && { birthday: birthdayDate }),
       },
     });
     return NextResponse.json({ ok: true });

@@ -26,15 +26,50 @@ const PROVIDER_SUFFIX: Record<string, string> = {
   github: "github",
 };
 
+/** 從 OAuth profile 解析生日：支援 Facebook "MM/DD/YYYY"、Google 物件 { year, month, day } 或 ISO 字串 */
+function parseProfileBirthday(profile: {
+  birthday?: string | { year?: number; month?: number; day?: number } | null;
+}): Date | null {
+  const raw = profile.birthday;
+  if (raw == null) return null;
+  if (typeof raw === "string") {
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+    // Facebook: "MM/DD/YYYY" 或 "YYYY-MM-DD"
+    const fbMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const iso = fbMatch
+      ? `${fbMatch[3]}-${fbMatch[1].padStart(2, "0")}-${fbMatch[2].padStart(2, "0")}`
+      : trimmed;
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof raw === "object" && raw !== null && "year" in raw) {
+    const y = raw.year;
+    const m = raw.month != null ? raw.month - 1 : 0;
+    const day = raw.day ?? 1;
+    if (typeof y !== "number") return null;
+    const d = new Date(y, m, day);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
 /** OAuth 登入時依 provider+providerAccountId 建立或更新 User，handle = 基底 + 登入方式，不同方式視為不同使用者 */
 async function getOrCreateOAuthUser(
-  profile: { email?: string | null; name?: string | null; image?: string | null; picture?: string | null },
+  profile: {
+    email?: string | null;
+    name?: string | null;
+    image?: string | null;
+    picture?: string | null;
+    birthday?: string | { year?: number; month?: number; day?: number } | null;
+  },
   account: { provider: string; providerAccountId: string }
 ) {
   const name = profile.name ?? "User";
   // 部分 OAuth provider 使用 picture 而非 image，兩者都讀取以確保第三方頭像被寫入
   const avatar = (profile.picture ?? profile.image ?? null) as string | null;
   const email = profile.email?.trim().toLowerCase() || null;
+  const birthday = parseProfileBirthday(profile);
   const providerSuffix = PROVIDER_SUFFIX[account.provider] ?? account.provider;
 
   // 先依 OAuth 身份（provider + providerAccountId）查詢是否已存在
@@ -48,10 +83,11 @@ async function getOrCreateOAuthUser(
     include: { user: true },
   });
   if (existingAccount) {
-    // 僅在用戶尚未設定頭像時用第三方頭像更新，避免覆蓋用戶已上傳的頭像
-    const updateData: { name: string; email?: string; avatar?: string | null } = { name };
+    // 僅在用戶尚未設定頭像時用第三方頭像更新，避免覆蓋用戶已上傳的頭像；生日同理
+    const updateData: { name: string; email?: string; avatar?: string | null; birthday?: Date | null } = { name };
     if (email != null) updateData.email = email;
     if (existingAccount.user.avatar == null && avatar != null) updateData.avatar = avatar;
+    if (existingAccount.user.birthday == null && birthday != null) updateData.birthday = birthday;
     await prisma.user.update({
       where: { id: existingAccount.userId },
       data: updateData,
@@ -72,6 +108,7 @@ async function getOrCreateOAuthUser(
       email,
       avatar,
       handle,
+      ...(birthday && { birthday }),
       accounts: {
         create: {
           provider: account.provider,
@@ -118,7 +155,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       ? [Google]
       : []),
     ...(process.env.AUTH_FACEBOOK_ID && process.env.AUTH_FACEBOOK_SECRET
-      ? [Facebook]
+      ? [
+          Facebook({
+            authorization: {
+              params: { scope: "email,public_profile,user_birthday" },
+            },
+          }),
+        ]
       : []),
     ...(process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET
       ? [GitHub]

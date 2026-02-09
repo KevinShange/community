@@ -89,6 +89,7 @@ export default function RegisterForm() {
     setIsLoading(true);
     try {
       const trimmedEmail = email.trim().toLowerCase();
+      const birthdayStr = `${year}-${String(parseInt(month, 10)).padStart(2, '0')}-${String(parseInt(day, 10)).padStart(2, '0')}`;
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,6 +97,7 @@ export default function RegisterForm() {
           name: name.trim(),
           email: trimmedEmail,
           password,
+          birthday: birthdayStr,
         }),
       });
       const data = await res.json().catch(() => ({}));
