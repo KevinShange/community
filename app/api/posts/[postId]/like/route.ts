@@ -66,7 +66,7 @@ export async function PUT(
           likeCount: updated.likeCount,
         });
       }
-      return NextResponse.json({ liked: false });
+      return NextResponse.json({ liked: false, likeCount: updated?.likeCount ?? 0 });
     }
 
     await prisma.$transaction([
@@ -88,7 +88,7 @@ export async function PUT(
         likedBy: { name: user.name, handle: user.handle, avatar: user.avatar },
       });
     }
-    return NextResponse.json({ liked: true });
+    return NextResponse.json({ liked: true, likeCount: updated?.likeCount ?? 0 });
   } catch (error) {
     console.error('Error toggling post like:', error);
     return NextResponse.json({ error: 'Failed to toggle like' }, { status: 500 });

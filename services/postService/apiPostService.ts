@@ -108,24 +108,22 @@ export function createApiPostService(
     },
 
     toggleLike(postId: PostId) {
-      fetchJson<{ liked: boolean }>(`/api/posts/${postId}/like`, {
+      fetchJson<{ liked: boolean; likeCount?: number }>(`/api/posts/${postId}/like`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user: currentUser }),
       })
-        .then(({ liked }) => {
+        .then(({ liked, likeCount: serverLikeCount }) => {
           updatePosts((prev) =>
             prev.map((p) => {
               if (p.id !== postId) return p;
-              const wasLiked = p.isLikedByMe;
-              const nextLiked = liked;
               const nextCount =
-                nextLiked === wasLiked
-                  ? p.likeCount
-                  : nextLiked
+                typeof serverLikeCount === 'number'
+                  ? serverLikeCount
+                  : liked
                     ? p.likeCount + 1
                     : Math.max(0, p.likeCount - 1);
-              return { ...p, isLikedByMe: nextLiked, likeCount: nextCount };
+              return { ...p, isLikedByMe: liked, likeCount: nextCount };
             })
           );
         })
