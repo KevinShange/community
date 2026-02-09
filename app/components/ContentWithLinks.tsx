@@ -5,8 +5,8 @@ import Link from 'next/link';
 /** 僅辨識 http/https 連結，結尾可含常見標點（不納入 href） */
 const URL_REGEX = /(https?:\/\/[^\s<>"{}|\\^`[\]]+)/g;
 
-/** @ 開頭的使用者提及，使用者名為字母、數字、底線 */
-const MENTION_REGEX = /(@[a-zA-Z0-9_]+)/g;
+/** @ 開頭的使用者提及，使用者名為字母、數字、底線，「-」之後的後綴（如 -google）也視為同一提及 */
+const MENTION_REGEX = /(@[a-zA-Z0-9_]+(?:-[a-zA-Z0-9_]+)*)/g;
 
 function trimTrailingPunctuation(url: string): string {
   return url.replace(/[.,;:!?)\]]+$/, '');
@@ -31,7 +31,7 @@ function parseContent(content: string): { type: 'url' | 'mention' | 'text'; valu
     const mentionParts = part.split(MENTION_REGEX);
     for (let j = 0; j < mentionParts.length; j++) {
       const seg = mentionParts[j];
-      if (seg.startsWith('@') && /^@[a-zA-Z0-9_]+$/.test(seg)) {
+      if (seg.startsWith('@') && /^@[a-zA-Z0-9_]+(?:-[a-zA-Z0-9_]+)*$/.test(seg)) {
         segments.push({ type: 'mention', value: seg });
       } else if (seg) {
         segments.push({ type: 'text', value: seg });
