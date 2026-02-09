@@ -28,11 +28,12 @@ const PROVIDER_SUFFIX: Record<string, string> = {
 
 /** OAuth 登入時依 provider+providerAccountId 建立或更新 User，handle = 基底 + 登入方式，不同方式視為不同使用者 */
 async function getOrCreateOAuthUser(
-  profile: { email?: string | null; name?: string | null; image?: string | null },
+  profile: { email?: string | null; name?: string | null; image?: string | null; picture?: string | null },
   account: { provider: string; providerAccountId: string }
 ) {
   const name = profile.name ?? "User";
-  const avatar = profile.image ?? null;
+  // 部分 OAuth provider 使用 picture 而非 image，兩者都讀取以確保第三方頭像被寫入
+  const avatar = (profile.picture ?? profile.image ?? null) as string | null;
   const email = profile.email?.trim().toLowerCase() || null;
   const providerSuffix = PROVIDER_SUFFIX[account.provider] ?? account.provider;
 
@@ -47,9 +48,13 @@ async function getOrCreateOAuthUser(
     include: { user: true },
   });
   if (existingAccount) {
+    // 僅在用戶尚未設定頭像時用第三方頭像更新，避免覆蓋用戶已上傳的頭像
+    const updateData: { name: string; email?: string; avatar?: string | null } = { name };
+    if (email != null) updateData.email = email;
+    if (existingAccount.user.avatar == null && avatar != null) updateData.avatar = avatar;
     await prisma.user.update({
       where: { id: existingAccount.userId },
-      data: { name, avatar, ...(email != null ? { email } : {}) },
+      data: updateData,
     });
     return { id: existingAccount.userId, handle: existingAccount.user.handle };
   }
@@ -140,6 +145,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email?: string | null;
           name?: string | null;
           image?: string | null;
+          picture?: string | null;
         };
         const { id, handle } = await getOrCreateOAuthUser(profileData, account);
         token.id = id;
