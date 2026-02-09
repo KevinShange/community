@@ -58,6 +58,7 @@ export default function ContentWithLinks({ content, className = '' }: ContentWit
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline break-all"
+              onClick={(e) => e.stopPropagation()}
             >
               {seg.value}
             </a>
@@ -69,6 +70,7 @@ export default function ContentWithLinks({ content, className = '' }: ContentWit
               key={i}
               href={`/profile/${encodeURIComponent(seg.value)}`}
               className="text-blue-500 hover:underline"
+              onClick={(e) => e.stopPropagation()}
             >
               {seg.value}
             </Link>
