@@ -59,6 +59,9 @@ export async function DELETE(
 
     await prisma.post.delete({ where: { id: postId } });
 
+    const { triggerPusher } = await import('@/lib/pusher');
+    await triggerPusher('feed', 'post-deleted', { postId });
+
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error('Error deleting post:', error);

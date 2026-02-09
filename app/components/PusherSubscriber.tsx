@@ -8,7 +8,7 @@ import type { Post, Comment } from '@/types/models';
 const MAX_POST_CHANNELS = 50;
 
 export default function PusherSubscriber() {
-  const { posts, updatePostById, prependPostFromRealtime } = usePostStore();
+  const { posts, updatePostById, prependPostFromRealtime, removePostById } = usePostStore();
   const feedSubscribedRef = useRef(false);
 
   useEffect(() => {
@@ -22,6 +22,9 @@ export default function PusherSubscriber() {
       const feedChannel = pusher.subscribe('feed');
       feedChannel.bind('new-post', (data: Post) => {
         prependPostFromRealtime(data);
+      });
+      feedChannel.bind('post-deleted', (data: { postId: string }) => {
+        removePostById(data.postId);
       });
     }
 
@@ -62,7 +65,7 @@ export default function PusherSubscriber() {
         }
       }
     };
-  }, [posts, updatePostById, prependPostFromRealtime]);
+  }, [posts, updatePostById, prependPostFromRealtime, removePostById]);
 
   return null;
 }

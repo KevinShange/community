@@ -20,6 +20,8 @@ interface PostStoreContextType {
   updatePostById: (postId: string | number, update: Partial<Post> | UpdatePostFn) => void;
   /** 從即時推播新增一則貼文到列表頂部（避免重複） */
   prependPostFromRealtime: (post: Post) => void;
+  /** 從列表移除指定貼文（供 Pusher 刪除文章即時更新使用） */
+  removePostById: (postId: string | number) => void;
   toggleLike: (postId: string | number) => void;
   toggleRetweet: (postId: string | number) => void;
   toggleCommentLike: (postId: string | number, commentId: string | number) => void;
@@ -77,6 +79,10 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const removePostById = useCallback((postId: string | number) => {
+    setPosts((prev) => prev.filter((p) => String(p.id) !== String(postId)));
+  }, []);
+
   const postService = useMemo(() => {
     if (!currentUser) {
       return {
@@ -100,6 +106,7 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
         refetch,
         updatePostById,
         prependPostFromRealtime,
+        removePostById,
         toggleLike: postService.toggleLike,
         toggleRetweet: postService.toggleRetweet,
         toggleCommentLike: postService.toggleCommentLike,
