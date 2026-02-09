@@ -64,10 +64,15 @@ export function PostStoreProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  /** 樂觀更新用的暫存 id，與 apiPostService 一致，收到 Pusher 時用來替換而非再 prepend 避免重複 */
+  const TEMP_POST_ID = 'temp-post';
+
   const prependPostFromRealtime = useCallback((post: Post) => {
     setPosts((prev) => {
       const exists = prev.some((p) => String(p.id) === String(post.id));
       if (exists) return prev;
+      const hasTemp = prev.some((p) => String(p.id) === TEMP_POST_ID);
+      if (hasTemp) return prev.map((p) => (String(p.id) === TEMP_POST_ID ? post : p));
       return [post, ...prev];
     });
   }, []);
