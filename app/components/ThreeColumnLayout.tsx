@@ -253,7 +253,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   <button
                     type="button"
                     onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1"
+                    className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 cursor-pointer"
                     role="menuitem"
                   >
                     登出
