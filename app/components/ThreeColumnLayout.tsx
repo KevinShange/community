@@ -165,7 +165,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
               <button
                 type="button"
                 onClick={() => setPostModalOpen(true)}
-                className={`bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-bold rounded-full transition-all ${
+                className={`bg-blue-500 hover:bg-blue-600 hover:shadow-lg hover:shadow-blue-500/20 text-white font-bold rounded-full transition-all cursor-pointer ${
                   sidebarCollapsed ? 'w-10 h-10 flex items-center justify-center p-0' : 'w-full h-12'
                 }`}
                 title="Post"
@@ -185,7 +185,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             <button
               type="button"
               onClick={toggleSidebar}
-              className={`flex items-center rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-100 ${
+              className={`flex items-center rounded-full hover:bg-gray-800 transition-colors text-gray-400 hover:text-gray-100 cursor-pointer ${
                 sidebarCollapsed ? 'justify-center p-3 w-full' : 'gap-3 px-4 py-3 w-full'
               }`}
               title={sidebarCollapsed ? '展開側欄 (Ctrl+B)' : '收合為僅圖示 (Ctrl+B)'}

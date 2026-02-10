@@ -71,7 +71,7 @@ export default function PostDetailPage() {
                 <button
                   type="button"
                   onClick={() => router.push(`/profile/${encodeURIComponent(post.retweetedBy!.handle)}`)}
-                  className="hover:underline text-gray-500 hover:text-gray-300"
+                  className="hover:underline text-gray-500 hover:text-gray-300 cursor-pointer"
                 >
                   {post.retweetedBy.name}
                 </button>
@@ -82,14 +82,14 @@ export default function PostDetailPage() {
               <button
                 type="button"
                 onClick={() => router.push(`/profile/${encodeURIComponent(post.author.handle)}`)}
-                className="font-bold text-gray-100 text-[15px] hover:underline text-left"
+                className="font-bold text-gray-100 text-[15px] hover:underline text-left cursor-pointer"
               >
                 {post.author.name}
               </button>
               <button
                 type="button"
                 onClick={() => router.push(`/profile/${encodeURIComponent(post.author.handle)}`)}
-                className="text-gray-500 text-[15px] hover:underline hover:text-gray-300 text-left"
+                className="text-gray-500 text-[15px] hover:underline hover:text-gray-300 text-left cursor-pointer"
               >
                 {post.author.handle}
               </button>
@@ -128,7 +128,7 @@ export default function PostDetailPage() {
               </div>
             </div>
             <div className="flex items-center justify-between max-w-md">
-              <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors" type="button">
+              <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors cursor-pointer" type="button">
                 <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                   <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
@@ -138,7 +138,7 @@ export default function PostDetailPage() {
               </button>
               <button
                 onClick={() => toggleRetweet(post.id)}
-                className="flex items-center gap-2 group hover:text-green-500 transition-colors"
+                className="flex items-center gap-2 group hover:text-green-500 transition-colors cursor-pointer"
               >
                 <div className={`p-2 rounded-full transition-colors ${post.isRetweetedByMe ? 'bg-green-500/10' : 'group-hover:bg-green-500/10'}`}>
                   <svg className={`w-5 h-5 transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`} fill="currentColor" viewBox="0 0 24 24">
@@ -151,7 +151,7 @@ export default function PostDetailPage() {
               </button>
               <button
                 onClick={() => toggleLike(post.id)}
-                className="flex items-center gap-2 group hover:text-red-500 transition-colors"
+                className="flex items-center gap-2 group hover:text-red-500 transition-colors cursor-pointer"
               >
                 <div className={`p-2 rounded-full transition-colors ${post.isLikedByMe ? 'bg-red-500/10' : 'group-hover:bg-red-500/10'}`}>
                   <svg className={`w-5 h-5 transition-colors ${post.isLikedByMe ? 'text-red-500 fill-red-500' : 'text-gray-500 group-hover:text-red-500'}`} fill={post.isLikedByMe ? 'currentColor' : 'none'} stroke={post.isLikedByMe ? 'none' : 'currentColor'} viewBox="0 0 24 24">
@@ -162,7 +162,7 @@ export default function PostDetailPage() {
                   {post.likeCount > 1000 ? `${(post.likeCount / 1000).toFixed(1)}k` : post.likeCount}
                 </span>
               </button>
-              <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors" type="button">
+              <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors cursor-pointer" type="button">
                 <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                   <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>

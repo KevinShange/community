@@ -67,11 +67,11 @@ export default function Home() {
                     <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
                     </svg>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(post.retweetedBy!.handle)}`); }}
-                      className="hover:underline text-gray-500 hover:text-gray-300"
-                    >
+<button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(post.retweetedBy!.handle)}`); }}
+                    className="hover:underline text-gray-500 hover:text-gray-300 cursor-pointer"
+                  >
                       {post.retweetedBy.name}
                     </button>
                     <span>轉發了</span>
@@ -82,14 +82,14 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(post.author.handle)}`); }}
-                    className="font-bold text-gray-100 text-[15px] hover:underline text-left"
+                    className="font-bold text-gray-100 text-[15px] hover:underline text-left cursor-pointer"
                   >
                     {post.author.name}
                   </button>
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); router.push(`/profile/${encodeURIComponent(post.author.handle)}`); }}
-                    className="text-gray-500 text-[15px] hover:underline hover:text-gray-300 text-left"
+                    className="text-gray-500 text-[15px] hover:underline hover:text-gray-300 text-left cursor-pointer"
                   >
                     {post.author.handle}
                   </button>
@@ -108,7 +108,7 @@ export default function Home() {
                 {/* 可點擊區：點選內容轉跳至 Post 頁面 */}
                 <button
                   type="button"
-                  className="w-full text-left mb-3"
+                  className="w-full text-left mb-3 cursor-pointer"
                   onClick={() => router.push(`/post-detail/${post.id}`)}
                 >
                   <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
@@ -128,7 +128,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => router.push(`/post-detail/${post.id}`)}
-                      className="flex items-center gap-2 group hover:text-blue-500 transition-colors"
+                      className="flex items-center gap-2 group hover:text-blue-500 transition-colors cursor-pointer"
                     >
                       <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                         <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -141,7 +141,7 @@ export default function Home() {
                     {/* 轉發 */}
                     <button
                       onClick={() => toggleRetweet(post.id)}
-                      className="flex items-center gap-2 group hover:text-green-500 transition-colors"
+                      className="flex items-center gap-2 group hover:text-green-500 transition-colors cursor-pointer"
                     >
                       <div className={`p-2 rounded-full transition-colors ${post.isRetweetedByMe ? 'bg-green-500/10' : 'group-hover:bg-green-500/10'}`}>
                         <svg
@@ -160,7 +160,7 @@ export default function Home() {
                     {/* 喜歡 */}
                     <button 
                       onClick={() => toggleLike(post.id)}
-                      className="flex items-center gap-2 group hover:text-red-500 transition-colors"
+                      className="flex items-center gap-2 group hover:text-red-500 transition-colors cursor-pointer"
                     >
                       <div className={`p-2 rounded-full transition-colors ${post.isLikedByMe ? 'bg-red-500/10' : 'group-hover:bg-red-500/10'}`}>
                         <svg 
@@ -178,7 +178,7 @@ export default function Home() {
                     </button>
                     
                     {/* 分享 */}
-                    <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors">
+                    <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors cursor-pointer" type="button">
                       <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                         <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors" fill="currentColor" viewBox="0 0 24 24">
                           <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>

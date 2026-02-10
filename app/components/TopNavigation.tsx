@@ -25,7 +25,7 @@ export default function TopNavigation({
         <div className="flex items-center gap-4 px-4 py-3">
           <Link
             href="/"
-            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-800 rounded-full transition-colors cursor-pointer"
             aria-label="返回"
           >
             <svg
@@ -60,7 +60,7 @@ export default function TopNavigation({
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
-              className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              className="p-2 hover:bg-gray-800 rounded-full transition-colors cursor-pointer"
               aria-label="返回"
             >
               <svg
@@ -82,7 +82,7 @@ export default function TopNavigation({
             )}
           </div>
           <button
-            className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+            className="p-2 hover:bg-gray-800 rounded-full transition-colors cursor-pointer"
             aria-label="搜索"
           >
             <svg
@@ -126,7 +126,7 @@ export default function TopNavigation({
           <button
             type="button"
             onClick={() => setFeed('for-you')}
-            className="flex-1 relative py-3 group"
+            className="flex-1 relative py-3 group cursor-pointer"
           >
             <span className={`text-[15px] ${isForYou ? 'font-bold text-gray-100' : 'text-gray-500 group-hover:text-gray-300 transition-colors'}`}>
               All
@@ -136,7 +136,7 @@ export default function TopNavigation({
           <button
             type="button"
             onClick={() => setFeed('following')}
-            className="flex-1 relative py-3 group"
+            className="flex-1 relative py-3 group cursor-pointer"
           >
             <span className={`text-[15px] ${!isForYou ? 'font-bold text-gray-100' : 'text-gray-500 group-hover:text-gray-300 transition-colors'}`}>
               Following

@@ -169,7 +169,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
               <button
                 type="button"
                 onClick={handleBackToPost}
-                className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-100"
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-100 cursor-pointer"
                 aria-label="返回發文"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -208,7 +208,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                       <button
                         type="button"
                         onClick={(e) => handleDeleteDraft(draft.id, e)}
-                        className="p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0"
+                        className="p-2 rounded-full text-gray-400 hover:text-red-400 hover:bg-red-500/10 transition-colors shrink-0 cursor-pointer"
                         aria-label="刪除草稿"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -229,7 +229,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
               <button
                 type="button"
                 onClick={handleClose}
-                className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-100"
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-100 cursor-pointer"
                 aria-label="關閉"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -242,7 +242,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
               <button
                 type="button"
                 onClick={() => setShowDraftsView(true)}
-                className="px-3 py-2 rounded-full text-sm font-medium text-blue-500 hover:bg-blue-500/10 transition-colors"
+                className="px-3 py-2 rounded-full text-sm font-medium text-blue-500 hover:bg-blue-500/10 transition-colors cursor-pointer"
               >
                 草稿
               </button>
@@ -275,7 +275,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                       />
                       <button
                         type="button"
-                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors"
+                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors cursor-pointer"
                         aria-hidden="true"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -284,7 +284,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                       </button>
                       <button
                         type="button"
-                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors"
+                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors cursor-pointer"
                         aria-hidden="true"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -293,7 +293,7 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
                       </button>
                       <button
                         type="button"
-                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors"
+                        className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors cursor-pointer"
                         aria-hidden="true"
                       >
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -354,14 +354,14 @@ export default function PostModal({ isOpen, onClose }: PostModalProps) {
               <button
                 type="button"
                 onClick={handleSaveDraft}
-                className="px-4 py-2 rounded-full font-bold bg-gray-700 hover:bg-gray-600 text-gray-100 transition-colors"
+                className="px-4 py-2 rounded-full font-bold bg-gray-700 hover:bg-gray-600 text-gray-100 transition-colors cursor-pointer"
               >
                 儲存
               </button>
               <button
                 type="button"
                 onClick={handleDiscard}
-                className="px-4 py-2 rounded-full font-bold bg-red-500/90 hover:bg-red-500 text-white transition-colors"
+                className="px-4 py-2 rounded-full font-bold bg-red-500/90 hover:bg-red-500 text-white transition-colors cursor-pointer"
               >
                 放棄
               </button>

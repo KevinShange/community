@@ -64,21 +64,21 @@ export default function PostComposer() {
               />
               
               {/* GIF 圖示（保留樣式） */}
-              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors">
+              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors cursor-pointer">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M11.5 9H13v6h-1.5zM9 9H6c-.6 0-1 .5-1 1v4c0 .5.4 1 1 1h3c.6 0 1-.5 1-1v-2H8.5v1.5h-2v-3H10V10c0-.5-.4-1-1-1zm10 1.5V9h-4.5v6H16v-2h2v-1.5h-2v-1z"/>
                 </svg>
               </button>
               
               {/* 投票圖示 */}
-              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors">
+              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors cursor-pointer">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
                 </svg>
               </button>
               
               {/* 表情圖示 */}
-              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors">
+              <button className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors cursor-pointer">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <circle cx="15.5" cy="9.5" r="1.5"/>
                   <circle cx="8.5" cy="9.5" r="1.5"/>
