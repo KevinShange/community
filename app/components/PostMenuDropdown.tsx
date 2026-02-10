@@ -88,7 +88,7 @@ export default function PostMenuDropdown({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="p-1.5 hover:bg-blue-500/10 rounded-full transition-colors group"
+        className="p-1.5 hover:bg-blue-500/10 rounded-full transition-colors group cursor-pointer"
         aria-label="更多選項"
       >
         <svg
@@ -111,7 +111,7 @@ export default function PostMenuDropdown({
                 type="button"
                 onClick={handleToggleFollow}
                 disabled={followLoading || authorIsFollowing === null}
-                className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 disabled:opacity-60"
+                className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
                 role="menuitem"
               >
                 {followLoading ? '…' : authorIsFollowing ? 'Unfollow' : 'Follow'}
@@ -119,7 +119,7 @@ export default function PostMenuDropdown({
               <button
                 type="button"
                 onClick={handleRepost}
-                className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1"
+                className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 cursor-pointer"
                 role="menuitem"
               >
                 {post.isRetweetedByMe ? 'Undo Repost' : 'Repost post'}
@@ -130,7 +130,7 @@ export default function PostMenuDropdown({
             <button
               type="button"
               onClick={handleDelete}
-              className="w-full px-4 py-3 text-left text-red-400 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1"
+              className="w-full px-4 py-3 text-left text-red-400 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 cursor-pointer"
               role="menuitem"
             >
               Delete

@@ -282,7 +282,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
             <button
               type="button"
               onClick={() => setShowEditModal(true)}
-              className="px-4 py-2 rounded-full border border-gray-600 text-gray-100 font-bold text-[15px] hover:bg-gray-800 transition-colors"
+              className="px-4 py-2 rounded-full border border-gray-600 text-gray-100 font-bold text-[15px] hover:bg-gray-800 transition-colors cursor-pointer"
             >
               Edit profile
             </button>
@@ -291,7 +291,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
               type="button"
               onClick={handleToggleFollow}
               disabled={followLoading}
-              className="px-4 py-2 rounded-full bg-gray-100 text-gray-900 font-bold text-[15px] hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 rounded-full bg-gray-100 text-gray-900 font-bold text-[15px] hover:bg-gray-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors cursor-pointer"
             >
               {isFollowing ? '已 follow' : '尚未 follow'}
             </button>
@@ -357,7 +357,7 @@ export default function ProfileView({ viewedHandle }: ProfileViewProps) {
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className="flex-1 py-4 relative text-[15px] font-medium transition-colors hover:bg-gray-900/50"
+              className="flex-1 py-4 relative text-[15px] font-medium transition-colors hover:bg-gray-900/50 cursor-pointer"
             >
               <span className={activeTab === key ? 'text-gray-100' : 'text-gray-500'}>{label}</span>
               {activeTab === key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />}
@@ -489,7 +489,7 @@ function ProfilePostCard({
               <button
                 type="button"
                 onClick={() => onGoToProfile(post.retweetedBy!.handle)}
-                className="hover:underline text-gray-500 hover:text-gray-300"
+                className="hover:underline text-gray-500 hover:text-gray-300 cursor-pointer"
               >
                 {post.retweetedBy.name}
               </button>
@@ -500,14 +500,14 @@ function ProfilePostCard({
             <button
               type="button"
               onClick={() => onGoToProfile(post.author.handle)}
-              className="font-bold text-gray-100 text-[15px] hover:underline text-left"
+              className="font-bold text-gray-100 text-[15px] hover:underline text-left cursor-pointer"
             >
               {post.author.name}
             </button>
             <button
               type="button"
               onClick={() => onGoToProfile(post.author.handle)}
-              className="text-gray-500 text-[15px] hover:underline hover:text-gray-300"
+              className="text-gray-500 text-[15px] hover:underline hover:text-gray-300 cursor-pointer"
             >
               {post.author.handle}
             </button>
@@ -525,7 +525,7 @@ function ProfilePostCard({
           {/* 點選內容轉跳至 Post 頁面 */}
           <button
             type="button"
-            className="w-full text-left mb-3"
+            className="w-full text-left mb-3 cursor-pointer"
             onClick={() => onGoToPost(post.id)}
           >
             <p className="text-gray-100 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
@@ -542,7 +542,7 @@ function ProfilePostCard({
             <button
               type="button"
               onClick={() => onGoToPost(post.id)}
-              className="flex items-center gap-2 group hover:text-blue-500 transition-colors"
+              className="flex items-center gap-2 group hover:text-blue-500 transition-colors cursor-pointer"
             >
               <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                 <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
@@ -553,7 +553,7 @@ function ProfilePostCard({
             </button>
             <button
               onClick={onToggleRetweet}
-              className="flex items-center gap-2 group hover:text-green-500 transition-colors"
+              className="flex items-center gap-2 group hover:text-green-500 transition-colors cursor-pointer"
             >
               <span className={`text-sm transition-colors ${post.isRetweetedByMe ? 'text-green-500' : 'text-gray-500 group-hover:text-green-500'}`}>RETWEET</span>
               <div className={`p-2 rounded-full transition-colors ${post.isRetweetedByMe ? 'bg-green-500/10' : 'group-hover:bg-green-500/10'}`}>
@@ -569,7 +569,7 @@ function ProfilePostCard({
                 {post.retweetCount > 1000 ? `${(post.retweetCount / 1000).toFixed(1)}k` : post.retweetCount}
               </span>
             </button>
-            <button onClick={onToggleLike} className="flex items-center gap-2 group hover:text-red-500 transition-colors">
+            <button onClick={onToggleLike} className="flex items-center gap-2 group hover:text-red-500 transition-colors cursor-pointer">
               <div
                 className={`p-2 rounded-full transition-colors ${
                   post.isLikedByMe ? 'bg-red-500/10' : 'group-hover:bg-red-500/10'
@@ -594,7 +594,7 @@ function ProfilePostCard({
                 {post.likeCount > 1000 ? `${(post.likeCount / 1000).toFixed(1)}k` : post.likeCount}
               </span>
             </button>
-            <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors" type="button">
+            <button className="flex items-center gap-2 group hover:text-blue-500 transition-colors cursor-pointer" type="button">
               <div className="p-2 group-hover:bg-blue-500/10 rounded-full transition-colors">
                 <svg className="w-5 h-5 text-gray-500 group-hover:text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z" />

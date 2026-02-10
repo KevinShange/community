@@ -103,7 +103,7 @@ export default function ComposerImageUpload({
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={uploading}
-            className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors disabled:opacity-60"
+            className="p-2 text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors disabled:opacity-60 cursor-pointer"
             aria-label={label}
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

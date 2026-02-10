@@ -30,7 +30,7 @@ function getHighlightedHtml(value: string): string {
     const part = parts[i];
     if (part.match(/^https?:\/\//)) {
       // URL：顯示為不同顏色，但不加錨點
-      pieces.push(`<span class="text-blue-400">${escapeHtml(part)}</span>`);
+      pieces.push(`<span class="text-blue-400 break-all">${escapeHtml(part)}</span>`);
     } else if (part) {
       pieces.push(escapeHtml(part));
     }
@@ -64,7 +64,7 @@ export default function HighlightedTextarea({
       {/* 背景高亮層：顯示文字與網址顏色 */}
       <div
         ref={overlayRef}
-        className={`pointer-events-none absolute inset-0 whitespace-pre-wrap break-words text-xl leading-relaxed text-gray-100 ${
+        className={`pointer-events-none absolute inset-0 whitespace-pre-wrap break-all overflow-hidden text-xl leading-relaxed text-gray-100 ${
           value ? '' : 'text-gray-500'
         } ${className}`}
         aria-hidden="true"
@@ -89,7 +89,7 @@ export default function HighlightedTextarea({
         placeholder={placeholder}
         rows={rows}
         onScroll={handleScroll}
-        className={`relative w-full bg-transparent text-transparent caret-white text-xl leading-relaxed resize-none focus:outline-none min-h-[80px] ${className}`}
+        className={`relative w-full bg-transparent text-transparent caret-white text-xl leading-relaxed resize-none focus:outline-none min-h-[80px] break-all ${className}`}
         {...rest}
       />
     </div>
