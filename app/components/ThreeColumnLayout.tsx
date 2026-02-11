@@ -110,7 +110,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     } ${active ? 'bg-gray-800' : 'hover:bg-gray-800'}`;
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-gray-100">
+    <div className="flex min-h-screen w-full max-w-full min-w-0 bg-gray-950 text-gray-100 overflow-x-hidden">
       {/* 左側導航欄 - 可切換僅圖示 / 正常寬度，快捷鍵 Ctrl+B 或 Cmd+B */}
       <aside
         className={`flex-shrink-0 border-r border-gray-800 bg-gray-950 transition-[width] duration-200 ${
@@ -328,9 +328,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
         </div>
       </main>
 
-      {/* 右側輔助資訊欄 - 中等寬度，固定；當中間欄 < 畫面 1/3 時隱藏 */}
+      {/* 右側輔助資訊欄 - 中等寬度，固定；當中間欄 < 畫面 1/3 時隱藏；手機直向以 CSS 隱藏避免右側白條 */}
       {showRightColumn && (
-      <aside className="w-80 flex-shrink-0">
+      <aside className="hidden md:block w-80 flex-shrink-0">
         <div className="sticky top-0 h-screen overflow-y-auto hide-scrollbar">
           <div className="p-4 space-y-5">
             {/* 搜索框 */}
