@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -21,6 +22,8 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuTriggerRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, minWidth: 160 });
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => {
@@ -52,11 +55,25 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidebar]);
 
+  // 彈出選單定位：開啟時依觸發按鈕位置計算，供 Portal 使用
+  useEffect(() => {
+    if (!userMenuOpen || !userMenuTriggerRef.current || typeof document === 'undefined') return;
+    const el = userMenuTriggerRef.current;
+    const rect = el.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.top - 8,
+      left: rect.left,
+      minWidth: Math.max(rect.width, sidebarCollapsed ? 160 : 200),
+    });
+  }, [userMenuOpen, sidebarCollapsed]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
+      const target = event.target as Node;
+      if (userMenuRef.current?.contains(target)) return;
+      const menuEl = document.getElementById('user-menu-portal');
+      if (menuEl?.contains(target)) return;
+      setUserMenuOpen(false);
     }
     if (userMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -205,6 +222,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             {currentUser && (
             <div className={`relative ${sidebarCollapsed ? 'pt-2' : 'pt-4'}`} ref={userMenuRef}>
               <div
+                ref={userMenuTriggerRef}
                 role="button"
                 tabIndex={0}
                 onClick={() => setUserMenuOpen((prev) => !prev)}
@@ -245,21 +263,31 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   </>
                 )}
               </div>
-              {userMenuOpen && (
-                <div
-                  className={`absolute bottom-full mb-2 py-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl z-50 ${sidebarCollapsed ? 'left-0 right-0 min-w-[160px]' : 'left-0 right-0 min-w-[200px]'}`}
-                  role="menu"
-                >
-                  <button
-                    type="button"
-                    onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 cursor-pointer"
-                    role="menuitem"
+              {userMenuOpen &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                  <div
+                    id="user-menu-portal"
+                    role="menu"
+                    className="fixed py-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl z-[9999]"
+                    style={{
+                      top: menuPosition.top,
+                      left: menuPosition.left,
+                      minWidth: menuPosition.minWidth,
+                      transform: 'translateY(-100%)',
+                    }}
                   >
-                    登出
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => signOut({ callbackUrl: '/login' })}
+                      className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 cursor-pointer"
+                      role="menuitem"
+                    >
+                      登出
+                    </button>
+                  </div>,
+                  document.body
+                )}
             </div>
             )}
             </div>
