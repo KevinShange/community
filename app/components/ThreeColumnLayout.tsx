@@ -24,6 +24,10 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const userMenuRef = useRef<HTMLDivElement>(null);
   const userMenuTriggerRef = useRef<HTMLDivElement>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, minWidth: 160 });
+  const [showRightColumn, setShowRightColumn] = useState(true);
+
+  const RIGHT_COLUMN_WIDTH = 320; // w-80
+  const leftWidth = sidebarCollapsed ? 72 : 256; // w-[72px] | w-64
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => {
@@ -80,6 +84,25 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userMenuOpen]);
+
+  // 當中間欄「理論寬度」< 畫面 1/3 時隱藏右欄（用視窗與左/右欄寬推算，避免顯示/隱藏右欄造成閃爍）
+  // 小螢幕（如手機直向）直接隱藏右欄，避免 viewport 未正確設定時仍顯示
+  const updateShowRightColumn = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const vw = window.innerWidth;
+    if (vw <= 768) {
+      setShowRightColumn(false);
+      return;
+    }
+    const theoreticalMainWidth = vw - leftWidth - RIGHT_COLUMN_WIDTH;
+    setShowRightColumn(theoreticalMainWidth >= vw / 3);
+  }, [leftWidth]);
+
+  useEffect(() => {
+    updateShowRightColumn();
+    window.addEventListener('resize', updateShowRightColumn);
+    return () => window.removeEventListener('resize', updateShowRightColumn);
+  }, [updateShowRightColumn]);
 
   const navLinkClass = (active: boolean) =>
     `flex items-center rounded-full transition-colors group relative overflow-hidden ${
@@ -305,7 +328,8 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
         </div>
       </main>
 
-      {/* 右側輔助資訊欄 - 中等寬度，固定 */}
+      {/* 右側輔助資訊欄 - 中等寬度，固定；當中間欄 < 畫面 1/3 時隱藏 */}
+      {showRightColumn && (
       <aside className="w-80 flex-shrink-0">
         <div className="sticky top-0 h-screen overflow-y-auto hide-scrollbar">
           <div className="p-4 space-y-5">
@@ -430,6 +454,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
           </div>
         </div>
       </aside>
+      )}
     </div>
   );
 }
