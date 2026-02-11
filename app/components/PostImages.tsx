@@ -13,12 +13,12 @@ export default function PostImages({ imageUrls, className = '', maxHeight = '320
   const count = Math.min(imageUrls.length, 4);
   const gridClass =
     count === 1
-      ? 'rounded-2xl overflow-hidden max-w-full'
+      ? 'overflow-hidden max-w-full'
       : count === 2
-        ? 'grid grid-cols-2 gap-1 rounded-2xl overflow-hidden'
+        ? 'grid grid-cols-2 gap-1 overflow-hidden'
         : count === 3
-          ? 'grid grid-cols-3 gap-1 rounded-2xl overflow-hidden'
-          : 'grid grid-cols-2 gap-1 rounded-2xl overflow-hidden';
+          ? 'grid grid-cols-3 gap-1 overflow-hidden'
+          : 'grid grid-cols-2 gap-1 overflow-hidden';
 
   return (
     <div className={`${gridClass} ${className}`}>
@@ -30,7 +30,9 @@ export default function PostImages({ imageUrls, className = '', maxHeight = '320
           <img
             src={url}
             alt=""
-            className="w-full h-full object-cover"
+            className={count === 1
+              ? 'max-w-full h-auto w-auto block'
+              : 'w-full h-full object-cover'}
             style={count === 1 ? { maxHeight } : undefined}
           />
         </div>

@@ -1,5 +1,16 @@
 @import "tailwindcss";
 
+/* 防止手機直向時右側白條：限制寬度、禁止水平溢出 */
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 /* 自定义滚动条样式 - 暗色系 */
 * {
   scrollbar-width: thin;

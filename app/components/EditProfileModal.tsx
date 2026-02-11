@@ -156,7 +156,7 @@ export default function EditProfileModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-100"
+            className="p-2 hover:bg-gray-800 rounded-full transition-colors text-gray-400 hover:text-gray-100 cursor-pointer"
             aria-label="關閉"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -170,7 +170,7 @@ export default function EditProfileModal({
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="px-4 py-2 font-bold rounded-full bg-gray-100 text-gray-950 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 font-bold rounded-full bg-gray-100 text-gray-950 hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {saving ? '儲存中…' : '儲存'}
           </button>

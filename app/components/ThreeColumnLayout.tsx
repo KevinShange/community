@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -21,6 +22,12 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const userMenuTriggerRef = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, minWidth: 160 });
+  const [showRightColumn, setShowRightColumn] = useState(true);
+
+  const RIGHT_COLUMN_WIDTH = 320; // w-80
+  const leftWidth = sidebarCollapsed ? 72 : 256; // w-[72px] | w-64
 
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => {
@@ -52,11 +59,25 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [toggleSidebar]);
 
+  // 彈出選單定位：開啟時依觸發按鈕位置計算，供 Portal 使用
+  useEffect(() => {
+    if (!userMenuOpen || !userMenuTriggerRef.current || typeof document === 'undefined') return;
+    const el = userMenuTriggerRef.current;
+    const rect = el.getBoundingClientRect();
+    setMenuPosition({
+      top: rect.top - 8,
+      left: rect.left,
+      minWidth: Math.max(rect.width, sidebarCollapsed ? 160 : 200),
+    });
+  }, [userMenuOpen, sidebarCollapsed]);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
+      const target = event.target as Node;
+      if (userMenuRef.current?.contains(target)) return;
+      const menuEl = document.getElementById('user-menu-portal');
+      if (menuEl?.contains(target)) return;
+      setUserMenuOpen(false);
     }
     if (userMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
@@ -64,13 +85,32 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userMenuOpen]);
 
+  // 當中間欄「理論寬度」< 畫面 1/3 時隱藏右欄（用視窗與左/右欄寬推算，避免顯示/隱藏右欄造成閃爍）
+  // 小螢幕（如手機直向）直接隱藏右欄，避免 viewport 未正確設定時仍顯示
+  const updateShowRightColumn = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const vw = window.innerWidth;
+    if (vw <= 768) {
+      setShowRightColumn(false);
+      return;
+    }
+    const theoreticalMainWidth = vw - leftWidth - RIGHT_COLUMN_WIDTH;
+    setShowRightColumn(theoreticalMainWidth >= vw / 3);
+  }, [leftWidth]);
+
+  useEffect(() => {
+    updateShowRightColumn();
+    window.addEventListener('resize', updateShowRightColumn);
+    return () => window.removeEventListener('resize', updateShowRightColumn);
+  }, [updateShowRightColumn]);
+
   const navLinkClass = (active: boolean) =>
     `flex items-center rounded-full transition-colors group relative overflow-hidden ${
       sidebarCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3'
     } ${active ? 'bg-gray-800' : 'hover:bg-gray-800'}`;
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-gray-100">
+    <div className="flex min-h-screen w-full max-w-full min-w-0 bg-gray-950 text-gray-100 overflow-x-hidden">
       {/* 左側導航欄 - 可切換僅圖示 / 正常寬度，快捷鍵 Ctrl+B 或 Cmd+B */}
       <aside
         className={`flex-shrink-0 border-r border-gray-800 bg-gray-950 transition-[width] duration-200 ${
@@ -205,6 +245,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
             {currentUser && (
             <div className={`relative ${sidebarCollapsed ? 'pt-2' : 'pt-4'}`} ref={userMenuRef}>
               <div
+                ref={userMenuTriggerRef}
                 role="button"
                 tabIndex={0}
                 onClick={() => setUserMenuOpen((prev) => !prev)}
@@ -245,21 +286,31 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                   </>
                 )}
               </div>
-              {userMenuOpen && (
-                <div
-                  className={`absolute bottom-full mb-2 py-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl z-50 ${sidebarCollapsed ? 'left-0 right-0 min-w-[160px]' : 'left-0 right-0 min-w-[200px]'}`}
-                  role="menu"
-                >
-                  <button
-                    type="button"
-                    onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1"
-                    role="menuitem"
+              {userMenuOpen &&
+                typeof document !== 'undefined' &&
+                createPortal(
+                  <div
+                    id="user-menu-portal"
+                    role="menu"
+                    className="fixed py-2 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl z-[9999]"
+                    style={{
+                      top: menuPosition.top,
+                      left: menuPosition.left,
+                      minWidth: menuPosition.minWidth,
+                      transform: 'translateY(-100%)',
+                    }}
                   >
-                    登出
-                  </button>
-                </div>
-              )}
+                    <button
+                      type="button"
+                      onClick={() => signOut({ callbackUrl: '/login' })}
+                      className="w-full px-4 py-3 text-left text-gray-100 hover:bg-gray-800 transition-colors text-[15px] font-medium rounded-lg mx-1 cursor-pointer"
+                      role="menuitem"
+                    >
+                      登出
+                    </button>
+                  </div>,
+                  document.body
+                )}
             </div>
             )}
             </div>
@@ -277,8 +328,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
         </div>
       </main>
 
-      {/* 右側輔助資訊欄 - 中等寬度，固定 */}
-      <aside className="w-80 flex-shrink-0">
+      {/* 右側輔助資訊欄 - 中等寬度，固定；當中間欄 < 畫面 1/3 時隱藏；手機直向以 CSS 隱藏避免右側白條 */}
+      {showRightColumn && (
+      <aside className="hidden md:block w-80 flex-shrink-0">
         <div className="sticky top-0 h-screen overflow-y-auto hide-scrollbar">
           <div className="p-4 space-y-5">
             {/* 搜索框 */}
@@ -402,6 +454,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
           </div>
         </div>
       </aside>
+      )}
     </div>
   );
 }
