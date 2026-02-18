@@ -110,7 +110,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     } ${active ? 'bg-gray-800' : 'hover:bg-gray-800'}`;
 
   return (
-    <div className="flex min-h-screen w-full max-w-full min-w-0 bg-gray-950 text-gray-100 overflow-x-hidden">
+    <div className="flex h-screen w-full max-w-full min-w-0 bg-gray-950 text-gray-100 overflow-hidden">
       {/* 左側導航欄 - 可切換僅圖示 / 正常寬度，快捷鍵 Ctrl+B 或 Cmd+B */}
       <aside
         className={`flex-shrink-0 border-r border-gray-800 bg-gray-950 transition-[width] duration-200 ${
@@ -321,9 +321,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
       {/* Post 發文彈出視窗 */}
       <PostModal isOpen={postModalOpen} onClose={() => setPostModalOpen(false)} />
 
-      {/* 中央內容區 - 最寬，可滾動 */}
-      <main className="flex-1 min-w-0 border-r border-gray-800">
-        <div className="max-w-2xl mx-auto">
+      {/* 中央內容區 - 最寬，僅此區可獨立捲動 */}
+      <main className="flex-1 min-w-0 min-h-0 flex flex-col border-r border-gray-800 overflow-y-auto">
+        <div className="max-w-2xl mx-auto w-full flex-1">
           {children}
         </div>
       </main>
