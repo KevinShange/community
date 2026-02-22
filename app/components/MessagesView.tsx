@@ -108,8 +108,9 @@ export default function MessagesView() {
     channel.bind('new-dm', (data: DirectMessageItem) => {
       fetchConversations();
       const myHandle = currentUser.handle;
-      const otherHandle =
-        data.sender.handle === myHandle ? data.receiver.handle : data.sender.handle;
+      // 只對「對方傳給我的」訊息追加到畫面；自己發出的已在 sendMessage 裡加入，避免重複
+      if (data.sender.handle === myHandle) return;
+      const otherHandle = data.sender.handle;
       const currentSelected = selectedHandleRef.current;
       if (currentSelected === otherHandle) {
         setMessages((prev) =>
