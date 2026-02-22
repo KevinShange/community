@@ -67,6 +67,8 @@ export interface DirectMessageItem {
 /** 對話摘要（左欄列表一項） */
 export interface ConversationSummary {
   partner: Author;
+  /** 此聊天室對象是否為已追蹤使用者 */
+  isFollowing: boolean;
   lastMessage: {
     content: string;
     imageUrls?: string[];

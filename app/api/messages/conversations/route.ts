@@ -13,7 +13,8 @@ function toAuthor(u: { name: string; avatar: string | null; handle: string }): A
 
 /**
  * GET /api/messages/conversations
- * 回傳與「當前使用者有追蹤關係」的對話列表（僅顯示有至少一則訊息的對象）。
+ * 回傳對話列表：包含已追蹤使用者，以及有發過訊息給自己的使用者（每個對象代表一個聊天室）。
+ * 每項帶 isFollowing 表示該聊天室對象是否為已追蹤使用者。
  * Header: x-user-handle
  */
 export async function GET() {
@@ -32,18 +33,15 @@ export async function GET() {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // 我追蹤的人（完整資料）
-    const following = await prisma.user.findMany({
-      where: {
-        id: { in: (await prisma.follow.findMany({ where: { followerId: me.id }, select: { followingId: true } })).map((f) => f.followingId) },
-      },
-      select: { id: true, name: true, avatar: true, handle: true },
+    const followingRows = await prisma.follow.findMany({
+      where: { followerId: me.id },
+      select: { followingId: true },
     });
-    const followingIds = following.map((u) => u.id);
+    const followingIds = new Set(followingRows.map((f) => f.followingId));
 
-    // 與我有私訊往來的最近一則
+    // 我發出的私訊（對方可為任何人）
     const sent = await prisma.directMessage.findMany({
-      where: { senderId: me.id, receiverId: { in: followingIds } },
+      where: { senderId: me.id },
       orderBy: { createdAt: 'desc' },
       select: {
         content: true,
@@ -52,8 +50,9 @@ export async function GET() {
         receiver: { select: { id: true, name: true, avatar: true, handle: true } },
       },
     });
+    // 我收到的私訊（發送者可為任何人）
     const received = await prisma.directMessage.findMany({
-      where: { receiverId: me.id, senderId: { in: followingIds } },
+      where: { receiverId: me.id },
       orderBy: { createdAt: 'desc' },
       select: {
         content: true,
@@ -96,24 +95,19 @@ export async function GET() {
       }
     }
 
-    // 左欄：所有我追蹤的人，有訊息的排前面並帶 lastMessage，沒訊息的 lastMessage 為 null
-    const withLast: ConversationSummary[] = following.map((partner) => {
-      const entry = byPartnerId.get(partner.id);
-      if (entry) {
-        return {
-          partner: toAuthor(partner),
-          lastMessage: {
-            content: entry.content,
-            imageUrls: entry.imageUrls ?? undefined,
-            createdAt: entry.lastAt.toISOString(),
-          },
-        };
-      }
-      return { partner: toAuthor(partner), lastMessage: null };
-    });
-    const list = withLast.sort((a, b) => {
-      const aTime = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
-      const bTime = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+    const list: ConversationSummary[] = Array.from(byPartnerId.values()).map((entry) => ({
+      partner: toAuthor(entry.partner),
+      isFollowing: followingIds.has(entry.partner.id),
+      lastMessage: {
+        content: entry.content,
+        imageUrls: entry.imageUrls ?? undefined,
+        createdAt: entry.lastAt.toISOString(),
+      },
+    }));
+
+    list.sort((a, b) => {
+      const aTime = new Date(a.lastMessage.createdAt).getTime();
+      const bTime = new Date(b.lastMessage.createdAt).getTime();
       return bTime - aTime;
     });
 

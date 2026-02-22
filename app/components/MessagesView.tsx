@@ -141,9 +141,10 @@ export default function MessagesView() {
       )
     : conversations;
 
-  const selectedPartner = selectedHandle
-    ? conversations.find((c) => c.partner.handle === selectedHandle)?.partner
+  const selectedConversation = selectedHandle
+    ? conversations.find((c) => c.partner.handle === selectedHandle)
     : null;
+  const selectedPartner = selectedConversation?.partner ?? null;
 
   if (!currentUser) return null;
 
@@ -163,11 +164,11 @@ export default function MessagesView() {
             </button>
           </div>
           <p className="text-sm text-gray-500 mb-3">
-            {conversations.filter((c) => c.lastMessage).length} conversations
+            {conversations.length} 個聊天室
           </p>
           <input
             type="text"
-            placeholder="Search contacts..."
+            placeholder="搜尋聊天對象..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-10 pl-4 pr-4 bg-gray-800 rounded-full text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 border-0"
@@ -197,7 +198,7 @@ export default function MessagesView() {
           {loadingConvos ? (
             <div className="p-4 text-gray-500">Loading...</div>
           ) : filteredConversations.length === 0 ? (
-            <div className="p-4 text-gray-500 text-sm">No conversations yet.</div>
+            <div className="p-4 text-gray-500 text-sm">尚無聊天室。</div>
           ) : (
             filteredConversations.map((conv) => {
               const isSelected = conv.partner.handle === selectedHandle;
@@ -219,13 +220,25 @@ export default function MessagesView() {
                     <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-gray-900" title="Online" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-100 truncate">{conv.partner.name}</p>
+                    <p className="font-semibold text-gray-100 truncate flex items-center gap-2">
+                      {conv.partner.name}
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded font-normal ${
+                          conv.isFollowing
+                            ? 'bg-blue-500/20 text-blue-400'
+                            : 'bg-gray-700 text-gray-400'
+                        }`}
+                        title={conv.isFollowing ? '已追蹤' : '未追蹤'}
+                      >
+                        {conv.isFollowing ? '已追蹤' : '未追蹤'}
+                      </span>
+                    </p>
                     <p className="text-sm text-gray-500 truncate">
                       {conv.lastMessage
                         ? conv.lastMessage.imageUrls?.length
-                          ? '📷 Image'
+                          ? '📷 圖片'
                           : conv.lastMessage.content || '—'
-                        : 'No messages yet'}
+                        : '尚無訊息'}
                     </p>
                     <p className="text-xs text-gray-500">Online</p>
                   </div>
@@ -245,7 +258,7 @@ export default function MessagesView() {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {!selectedPartner ? (
           <div className="flex-1 flex items-center justify-center text-gray-500">
-            <p>Select a conversation</p>
+            <p>選擇一個聊天室</p>
           </div>
         ) : (
           <>
@@ -256,7 +269,20 @@ export default function MessagesView() {
                 className="w-10 h-10 rounded-full object-cover"
               />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-100">{selectedPartner.name}</p>
+                <p className="font-semibold text-gray-100 flex items-center gap-2">
+                  {selectedPartner.name}
+                  {selectedConversation && (
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded font-normal ${
+                        selectedConversation.isFollowing
+                          ? 'bg-blue-500/20 text-blue-400'
+                          : 'bg-gray-700 text-gray-400'
+                      }`}
+                    >
+                      {selectedConversation.isFollowing ? '已追蹤' : '未追蹤'}
+                    </span>
+                  )}
+                </p>
                 <p className="text-sm text-gray-500">Online</p>
               </div>
               <button
@@ -290,7 +316,7 @@ export default function MessagesView() {
               ) : (
                 <>
                   {messages.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4">No messages yet. Say hi!</p>
+                    <p className="text-gray-500 text-sm py-4">尚無訊息，打聲招呼吧！</p>
                   ) : (
                     (() => {
                       let lastDate = '';
