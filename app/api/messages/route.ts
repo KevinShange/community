@@ -142,6 +142,18 @@ export async function POST(req: Request) {
       imageUrls: imageUrlsOut?.length ? imageUrlsOut : undefined,
       createdAt: created.createdAt.toISOString(),
     };
+
+    // 即時推播：通知收件人（與發送者其他分頁）有新訊息
+    const { triggerPusher } = await import('@/lib/pusher');
+    const receiverHandle = created.receiver.handle;
+    const senderHandle = created.sender.handle;
+    const channelReceiver = `user-messages-${receiverHandle}`;
+    const channelSender = `user-messages-${senderHandle}`;
+    await triggerPusher(channelReceiver, 'new-dm', item);
+    if (channelSender !== channelReceiver) {
+      await triggerPusher(channelSender, 'new-dm', item);
+    }
+
     return NextResponse.json(item);
   } catch (error) {
     console.error('Error sending message:', error);

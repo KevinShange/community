@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUserStore } from '@/store/useUserStore';
+import { getPusherClient, isPusherConfigured } from '@/lib/pusher-client';
 import type { ConversationSummary, DirectMessageItem } from '@/types/models';
 import ComposerImageUpload from './ComposerImageUpload';
 
@@ -55,6 +56,8 @@ export default function MessagesView() {
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const selectedHandleRef = useRef<string | null>(null);
+  selectedHandleRef.current = selectedHandle;
 
   const fetchConversations = useCallback(async () => {
     if (!currentUser?.handle) return;
@@ -94,6 +97,31 @@ export default function MessagesView() {
       .catch(() => setMessages([]))
       .finally(() => setLoadingMessages(false));
   }, [selectedHandle, currentUser?.handle]);
+
+  // 即時推播：訂閱自己的訊息頻道，有新訊息時更新對話列表與當前聊天內容
+  useEffect(() => {
+    if (!currentUser?.handle || !isPusherConfigured()) return;
+    const pusher = getPusherClient();
+    if (!pusher) return;
+    const channelName = `user-messages-${currentUser.handle}`;
+    const channel = pusher.subscribe(channelName);
+    channel.bind('new-dm', (data: DirectMessageItem) => {
+      fetchConversations();
+      const myHandle = currentUser.handle;
+      const otherHandle =
+        data.sender.handle === myHandle ? data.receiver.handle : data.sender.handle;
+      const currentSelected = selectedHandleRef.current;
+      if (currentSelected === otherHandle) {
+        setMessages((prev) =>
+          prev.some((m) => m.id === data.id) ? prev : [...prev, data]
+        );
+      }
+    });
+    return () => {
+      channel.unbind('new-dm');
+      pusher.unsubscribe(channelName);
+    };
+  }, [currentUser?.handle, fetchConversations]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
