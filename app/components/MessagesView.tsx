@@ -56,6 +56,7 @@ export default function MessagesView() {
   const [searchQuery, setSearchQuery] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const selectedHandleRef = useRef<string | null>(null);
   selectedHandleRef.current = selectedHandle;
 
@@ -124,9 +125,19 @@ export default function MessagesView() {
     };
   }, [currentUser?.handle, fetchConversations]);
 
+  // 切換對話時：聊天區捲到最下（最新內容）、聚焦輸入框
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (!selectedHandle) return;
+    inputRef.current?.focus();
+  }, [selectedHandle]);
+
+  useEffect(() => {
+    if (!selectedHandle || loadingMessages) return;
+    const t = setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
+    return () => clearTimeout(t);
+  }, [selectedHandle, loadingMessages, messages]);
 
   const sendMessage = async () => {
     if (!currentUser?.handle || !selectedHandle) return;
@@ -183,7 +194,7 @@ export default function MessagesView() {
       <aside className="w-[320px] flex-shrink-0 border-r border-gray-800 flex flex-col min-h-0 overflow-hidden">
         <div className="p-4 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
-            <h1 className="text-xl font-bold text-gray-100">Conversations</h1>
+            <h1 className="text-xl font-bold text-gray-100">Messages</h1>
             <button
               type="button"
               className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center text-lg font-bold cursor-pointer"
@@ -450,6 +461,7 @@ export default function MessagesView() {
                   </svg>
                 </button>
                 <input
+                  ref={inputRef}
                   type="text"
                   placeholder="Type your message..."
                   value={inputContent}
