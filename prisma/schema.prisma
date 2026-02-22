@@ -35,6 +35,24 @@ model User {
   // 追蹤關係
   following Follow[] @relation("UserFollowing")
   followers Follow[] @relation("UserFollowers")
+
+  directMessagesSent    DirectMessage[] @relation("MessageSender")
+  directMessagesReceived DirectMessage[] @relation("MessageReceiver")
+}
+
+model DirectMessage {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String   @db.ObjectId
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String   @db.ObjectId
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  content    String   // 可為空字串若僅傳圖
+  imageUrls  Json?    // string[] from Cloudinary
+  createdAt  DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
 }
 
 model Account {

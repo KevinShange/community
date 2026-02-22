@@ -12,12 +12,14 @@ export interface ComposerImageUploadProps {
   disabled?: boolean;
   /** 按鈕的 aria-label */
   label?: string;
+  /** Cloudinary 資料夾，預設 posts */
+  folder?: string;
 }
 
-async function uploadFile(file: File): Promise<string> {
+async function uploadFile(file: File, folder: string): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
-  formData.append('folder', 'posts');
+  formData.append('folder', folder);
   const res = await fetch('/api/upload/cloudinary', {
     method: 'POST',
     body: formData,
@@ -32,6 +34,7 @@ export default function ComposerImageUpload({
   onChange,
   disabled,
   label = '圖片',
+  folder = 'posts',
 }: ComposerImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -52,7 +55,7 @@ export default function ComposerImageUpload({
     setError(null);
     setUploading(true);
     try {
-      const url = await uploadFile(file);
+      const url = await uploadFile(file, folder);
       onChange([...imageUrls, url]);
     } catch {
       setError('上傳失敗');

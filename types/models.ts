@@ -53,3 +53,23 @@ export interface Post {
   /** 轉發時間（ISO 字串） */
   retweetedAt?: string;
 }
+
+/** 私訊一則 */
+export interface DirectMessageItem {
+  id: string;
+  sender: Author;
+  receiver: Author;
+  content: string;
+  imageUrls?: string[];
+  createdAt: string;
+}
+
+/** 對話摘要（左欄列表一項） */
+export interface ConversationSummary {
+  partner: Author;
+  lastMessage: {
+    content: string;
+    imageUrls?: string[];
+    createdAt: string;
+  } | null;
+}

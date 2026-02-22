@@ -29,9 +29,12 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const RIGHT_COLUMN_WIDTH = 320; // w-80
   const leftWidth = sidebarCollapsed ? 72 : 256; // w-[72px] | w-64
 
+  const isMessagesPage = pathname.startsWith('/messages');
+
   const toggleSidebar = useCallback(() => {
     setSidebarCollapsed((prev) => {
       const next = !prev;
+      if (isMessagesPage) return true; // Messages 頁強制收合，不記憶偏好
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(next));
@@ -39,14 +42,18 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
       }
       return next;
     });
-  }, []);
+  }, [isMessagesPage]);
 
   useEffect(() => {
+    if (isMessagesPage) {
+      setSidebarCollapsed(true);
+      return;
+    }
     try {
       const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
       if (stored != null) setSidebarCollapsed(JSON.parse(stored));
     } catch (_) {}
-  }, []);
+  }, [isMessagesPage]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -85,10 +92,14 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [userMenuOpen]);
 
+  // Messages 頁不顯示右欄；其餘同下
   // 當中間欄「理論寬度」< 畫面 1/3 時隱藏右欄（用視窗與左/右欄寬推算，避免顯示/隱藏右欄造成閃爍）
-  // 小螢幕（如手機直向）直接隱藏右欄，避免 viewport 未正確設定時仍顯示
   const updateShowRightColumn = useCallback(() => {
     if (typeof window === 'undefined') return;
+    if (isMessagesPage) {
+      setShowRightColumn(false);
+      return;
+    }
     const vw = window.innerWidth;
     if (vw <= 768) {
       setShowRightColumn(false);
@@ -96,7 +107,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     }
     const theoreticalMainWidth = vw - leftWidth - RIGHT_COLUMN_WIDTH;
     setShowRightColumn(theoreticalMainWidth >= vw / 3);
-  }, [leftWidth]);
+  }, [leftWidth, isMessagesPage]);
 
   useEffect(() => {
     updateShowRightColumn();
@@ -173,16 +184,18 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                 {!sidebarCollapsed && <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl whitespace-nowrap">Notifications</span>}
               </Link>
               
-              <Link href="/messages" className={navLinkClass(false)}>
+              <Link href="/messages" className={navLinkClass(isMessagesPage)}>
                 <svg
-                  className="w-6 h-6 flex-shrink-0 text-gray-400 group-hover:text-blue-500 transition-colors"
+                  className={`w-6 h-6 flex-shrink-0 ${isMessagesPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                {!sidebarCollapsed && <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl whitespace-nowrap">Messages</span>}
+                {!sidebarCollapsed && (
+                  <span className={`text-xl whitespace-nowrap ${isMessagesPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}>Messages</span>
+                )}
               </Link>
               
               <Link href="/profile" className={navLinkClass(!!isProfile)}>
@@ -321,15 +334,15 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
       {/* Post 發文彈出視窗 */}
       <PostModal isOpen={postModalOpen} onClose={() => setPostModalOpen(false)} />
 
-      {/* 中央內容區 - 最寬，僅此區可獨立捲動 */}
+      {/* 中央內容區 - 最寬，僅此區可獨立捲動；Messages 頁全寬 */}
       <main className="flex-1 min-w-0 min-h-0 flex flex-col border-r border-gray-800 overflow-y-auto">
-        <div className="max-w-2xl mx-auto w-full flex-1">
+        <div className={isMessagesPage ? 'w-full flex-1 min-w-0' : 'max-w-2xl mx-auto w-full flex-1'}>
           {children}
         </div>
       </main>
 
-      {/* 右側輔助資訊欄 - 中等寬度，固定；當中間欄 < 畫面 1/3 時隱藏；手機直向以 CSS 隱藏避免右側白條 */}
-      {showRightColumn && (
+      {/* 右側輔助資訊欄 - Messages 頁不顯示；當中間欄 < 畫面 1/3 時隱藏；手機直向以 CSS 隱藏 */}
+      {showRightColumn && !isMessagesPage && (
       <aside className="hidden md:block w-80 flex-shrink-0">
         <div className="sticky top-0 h-screen overflow-y-auto hide-scrollbar">
           <div className="p-4 space-y-5">
