@@ -38,6 +38,10 @@ model User {
 
   directMessagesSent    DirectMessage[] @relation("MessageSender")
   directMessagesReceived DirectMessage[] @relation("MessageReceiver")
+
+  /** 我讀過與某人的對話的已讀時間（用於未讀圓點） */
+  conversationReadsAsReader  ConversationRead[] @relation("ConversationReadAsReader")
+  conversationReadsAsPartner  ConversationRead[] @relation("ConversationReadAsPartner")
 }
 
 model DirectMessage {
@@ -53,6 +57,19 @@ model DirectMessage {
   @@index([senderId])
   @@index([receiverId])
   @@index([createdAt])
+}
+
+/** 使用者對某對話的最後已讀時間（用於未讀圓點：對方有新訊息且晚於 lastReadAt 則未讀） */
+model ConversationRead {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  partnerId  String   @db.ObjectId
+  lastReadAt DateTime
+  user       User     @relation("ConversationReadAsReader", fields: [userId], references: [id], onDelete: Cascade)
+  partner    User     @relation("ConversationReadAsPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, partnerId])
+  @@index([userId])
 }
 
 model Account {

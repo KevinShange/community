@@ -103,16 +103,31 @@ export async function GET() {
       }
     }
 
-    const list: ConversationSummary[] = Array.from(byPartnerId.values()).map((entry) => ({
-      partner: toAuthor(entry.partner),
-      isFollowing: followingIds.has(entry.partner.id),
-      lastMessageFromPartner: !entry.lastFromMe,
-      lastMessage: {
-        content: entry.content,
-        imageUrls: entry.imageUrls ?? undefined,
-        createdAt: entry.lastAt.toISOString(),
-      },
-    }));
+    const partnerIds = Array.from(byPartnerId.keys());
+    const readStates = await prisma.conversationRead.findMany({
+      where: { userId: me.id, partnerId: { in: partnerIds } },
+      select: { partnerId: true, lastReadAt: true },
+    });
+    const lastReadByPartner = new Map(
+      readStates.map((r: { partnerId: string; lastReadAt: Date }) => [r.partnerId, r.lastReadAt])
+    );
+
+    const list: ConversationSummary[] = Array.from(byPartnerId.values()).map((entry) => {
+      const lastReadAt = lastReadByPartner.get(entry.partner.id) ?? null;
+      const hasUnread =
+        !entry.lastFromMe && (!lastReadAt || entry.lastAt > lastReadAt);
+      return {
+        partner: toAuthor(entry.partner),
+        isFollowing: followingIds.has(entry.partner.id),
+        lastMessageFromPartner: !entry.lastFromMe,
+        hasUnread,
+        lastMessage: {
+          content: entry.content,
+          imageUrls: entry.imageUrls ?? undefined,
+          createdAt: entry.lastAt.toISOString(),
+        },
+      };
+    });
 
     list.sort((a, b) => {
       const aTime = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;

@@ -71,6 +71,8 @@ export interface ConversationSummary {
   isFollowing: boolean;
   /** 最後一則訊息是否為對方發送（用於顯示未讀圓點） */
   lastMessageFromPartner?: boolean;
+  /** 是否有未讀訊息（對方發送且晚於上次已讀時間） */
+  hasUnread?: boolean;
   lastMessage: {
     content: string;
     imageUrls?: string[];

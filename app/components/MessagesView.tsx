@@ -99,6 +99,19 @@ export default function MessagesView() {
       .finally(() => setLoadingMessages(false));
   }, [selectedHandle, currentUser?.handle]);
 
+  // 打開聊天室時標記該對話為已讀，並更新列表（未讀圓點消失）
+  useEffect(() => {
+    if (!selectedHandle || !currentUser?.handle) return;
+    const headers = getMessagesHeaders(currentUser.handle);
+    fetch('/api/messages/conversations/read', {
+      method: 'POST',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ partnerHandle: selectedHandle }),
+    }).then((res) => {
+      if (res.ok) fetchConversations();
+    });
+  }, [selectedHandle, currentUser?.handle, fetchConversations]);
+
   // 即時推播：訂閱自己的訊息頻道，有新訊息時更新對話列表與當前聊天內容
   useEffect(() => {
     if (!currentUser?.handle || !isPusherConfigured()) return;
@@ -258,8 +271,8 @@ export default function MessagesView() {
                       alt=""
                       className="w-12 h-12 rounded-full object-cover"
                     />
-                    {/* 未打開此聊天室且有對方新訊息時顯示未讀圓點；打開聊天室後不顯示任何圓點 */}
-                    {!isSelected && conv.lastMessageFromPartner && (
+                    {/* 有未讀訊息（對方發送且晚於上次已讀）時顯示未讀圓點 */}
+                    {!isSelected && conv.hasUnread && (
                       <span
                         className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-blue-500 border-2 border-gray-900"
                         title="新訊息"
