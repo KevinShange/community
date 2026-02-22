@@ -178,10 +178,10 @@ export default function MessagesView() {
   if (!currentUser) return null;
 
   return (
-    <div className="flex h-full min-h-0 bg-gray-950 text-gray-100">
-      {/* 左欄：對話列表 */}
-      <aside className="w-[320px] flex-shrink-0 border-r border-gray-800 flex flex-col min-h-0">
-        <div className="p-4 border-b border-gray-800">
+    <div className="flex h-full min-h-0 overflow-hidden bg-gray-950 text-gray-100">
+      {/* 左欄：對話列表（獨立捲動） */}
+      <aside className="w-[320px] flex-shrink-0 border-r border-gray-800 flex flex-col min-h-0 overflow-hidden">
+        <div className="p-4 border-b border-gray-800 flex-shrink-0">
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-xl font-bold text-gray-100">Conversations</h1>
             <button
@@ -223,7 +223,8 @@ export default function MessagesView() {
             </button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0">
+        {/* 左欄獨立捲動區：只捲動對話列表 */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
           {loadingConvos ? (
             <div className="p-4 text-gray-500">Loading...</div>
           ) : filteredConversations.length === 0 ? (
@@ -283,8 +284,8 @@ export default function MessagesView() {
         </div>
       </aside>
 
-      {/* 右欄：聊天內容 */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+      {/* 右欄：聊天內容（獨立捲動） */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         {!selectedPartner ? (
           <div className="flex-1 flex items-center justify-center text-gray-500">
             <p>選擇一個聊天室</p>
@@ -336,9 +337,10 @@ export default function MessagesView() {
               </button>
             </header>
 
+            {/* 右欄獨立捲動區：只捲動聊天訊息，與左欄列表捲動分離 */}
             <div
               ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-4"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-4 py-3 space-y-4"
             >
               {loadingMessages ? (
                 <div className="text-gray-500 py-4">Loading messages...</div>

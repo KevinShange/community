@@ -336,7 +336,7 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
 
       {/* 中央內容區 - 最寬，僅此區可獨立捲動；Messages 頁全寬 */}
       <main className="flex-1 min-w-0 min-h-0 flex flex-col border-r border-gray-800 overflow-y-auto">
-        <div className={isMessagesPage ? 'w-full flex-1 min-w-0' : 'max-w-2xl mx-auto w-full flex-1'}>
+        <div className={isMessagesPage ? 'w-full flex-1 min-w-0 min-h-0' : 'max-w-2xl mx-auto w-full flex-1'}>
           {children}
         </div>
       </main>
