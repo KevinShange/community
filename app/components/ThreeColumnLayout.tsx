@@ -130,6 +130,22 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
       .catch(() => setMessagesUnread(false));
   }, [currentUser?.handle, setMessagesUnread]);
 
+  // 視窗 focus 時（從別的分頁／app 切回來）若不在 Messages 頁，重拉對話列表以更新未讀小圓點
+  useEffect(() => {
+    function handleFocus() {
+      if (!currentUser?.handle || pathname.startsWith('/messages')) return;
+      const headers = { 'x-user-handle': currentUser.handle };
+      fetch('/api/messages/conversations', { headers })
+        .then((res) => (res.ok ? res.json() : []))
+        .then((list: ConversationSummary[]) => {
+          setMessagesUnread(list.some((c) => c.hasUnread));
+        })
+        .catch(() => setMessagesUnread(false));
+    }
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [currentUser?.handle, pathname, setMessagesUnread]);
+
   const navLinkClass = (active: boolean) =>
     `flex items-center rounded-full transition-colors group relative overflow-hidden ${
       sidebarCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3'
