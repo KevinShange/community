@@ -65,7 +65,13 @@ export async function GET() {
     type PartnerRow = { id: string; name: string; avatar: string | null; handle: string };
     const byPartnerId = new Map<
       string,
-      { partner: PartnerRow; lastAt: Date; content: string; imageUrls: string[] | null }
+      {
+        partner: PartnerRow;
+        lastAt: Date;
+        content: string;
+        imageUrls: string[] | null;
+        lastFromMe: boolean;
+      }
     >();
 
     for (const row of sent) {
@@ -78,6 +84,7 @@ export async function GET() {
           lastAt: row.createdAt,
           content: row.content,
           imageUrls: urls,
+          lastFromMe: true,
         });
       }
     }
@@ -91,6 +98,7 @@ export async function GET() {
           lastAt: row.createdAt,
           content: row.content,
           imageUrls: urls,
+          lastFromMe: false,
         });
       }
     }
@@ -98,6 +106,7 @@ export async function GET() {
     const list: ConversationSummary[] = Array.from(byPartnerId.values()).map((entry) => ({
       partner: toAuthor(entry.partner),
       isFollowing: followingIds.has(entry.partner.id),
+      lastMessageFromPartner: !entry.lastFromMe,
       lastMessage: {
         content: entry.content,
         imageUrls: entry.imageUrls ?? undefined,
@@ -106,8 +115,8 @@ export async function GET() {
     }));
 
     list.sort((a, b) => {
-      const aTime = new Date(a.lastMessage.createdAt).getTime();
-      const bTime = new Date(b.lastMessage.createdAt).getTime();
+      const aTime = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const bTime = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
       return bTime - aTime;
     });
 

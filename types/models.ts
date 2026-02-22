@@ -69,6 +69,8 @@ export interface ConversationSummary {
   partner: Author;
   /** 此聊天室對象是否為已追蹤使用者 */
   isFollowing: boolean;
+  /** 最後一則訊息是否為對方發送（用於顯示未讀圓點） */
+  lastMessageFromPartner?: boolean;
   lastMessage: {
     content: string;
     imageUrls?: string[];

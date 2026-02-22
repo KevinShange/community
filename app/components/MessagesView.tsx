@@ -258,7 +258,19 @@ export default function MessagesView() {
                       alt=""
                       className="w-12 h-12 rounded-full object-cover"
                     />
-                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-gray-900" title="Online" />
+                    {/* 未打開此聊天室且有對方新訊息時顯示未讀圓點；打開聊天室後不顯示任何圓點 */}
+                    {!isSelected && conv.lastMessageFromPartner && (
+                      <span
+                        className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-blue-500 border-2 border-gray-900"
+                        title="新訊息"
+                      />
+                    )}
+                    {!isSelected && !conv.lastMessageFromPartner && (
+                      <span
+                        className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-gray-900"
+                        title="Online"
+                      />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-100 truncate flex items-center gap-2">
