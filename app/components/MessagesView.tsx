@@ -265,12 +265,6 @@ export default function MessagesView() {
                         title="新訊息"
                       />
                     )}
-                    {!isSelected && !conv.lastMessageFromPartner && (
-                      <span
-                        className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-green-500 border-2 border-gray-900"
-                        title="Online"
-                      />
-                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-100 truncate flex items-center gap-2">
@@ -293,7 +287,6 @@ export default function MessagesView() {
                           : conv.lastMessage.content || '—'
                         : '尚無訊息'}
                     </p>
-                    <p className="text-xs text-gray-500">Online</p>
                   </div>
                   {conv.lastMessage && (
                     <span className="text-xs text-gray-500 flex-shrink-0">
@@ -336,7 +329,6 @@ export default function MessagesView() {
                     </span>
                   )}
                 </p>
-                <p className="text-sm text-gray-500">Online</p>
               </div>
               <button
                 type="button"
