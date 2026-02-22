@@ -6,7 +6,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
+import { useMessagesUnreadStore } from '@/store/useMessagesUnreadStore';
 import PostModal from '@/app/components/PostModal';
+import type { ConversationSummary } from '@/types/models';
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
 
@@ -17,6 +19,7 @@ interface ThreeColumnLayoutProps {
 export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) {
   const pathname = usePathname();
   const { currentUser } = useUserStore();
+  const { hasUnread: hasMessagesUnread, setHasUnread: setMessagesUnread } = useMessagesUnreadStore();
   const isProfile = pathname === '/profile';
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [postModalOpen, setPostModalOpen] = useState(false);
@@ -115,6 +118,18 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     return () => window.removeEventListener('resize', updateShowRightColumn);
   }, [updateShowRightColumn]);
 
+  // 左欄 Messages 圖示的未讀小圓點：登入後拉一次對話列表，若有任一想有未讀則顯示
+  useEffect(() => {
+    if (!currentUser?.handle) return;
+    const headers = { 'x-user-handle': currentUser.handle };
+    fetch('/api/messages/conversations', { headers })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list: ConversationSummary[]) => {
+        setMessagesUnread(list.some((c) => c.hasUnread));
+      })
+      .catch(() => setMessagesUnread(false));
+  }, [currentUser?.handle, setMessagesUnread]);
+
   const navLinkClass = (active: boolean) =>
     `flex items-center rounded-full transition-colors group relative overflow-hidden ${
       sidebarCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3'
@@ -185,14 +200,22 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
               </Link>
               
               <Link href="/messages" className={navLinkClass(isMessagesPage)}>
-                <svg
-                  className={`w-6 h-6 flex-shrink-0 ${isMessagesPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
+                <div className="relative flex-shrink-0">
+                  <svg
+                    className={`w-6 h-6 ${isMessagesPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  {hasMessagesUnread && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-gray-950"
+                      aria-hidden
+                    />
+                  )}
+                </div>
                 {!sidebarCollapsed && (
                   <span className={`text-xl whitespace-nowrap ${isMessagesPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}>Messages</span>
                 )}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUserStore } from '@/store/useUserStore';
+import { useMessagesUnreadStore } from '@/store/useMessagesUnreadStore';
 import { getPusherClient, isPusherConfigured } from '@/lib/pusher-client';
 import type { ConversationSummary, DirectMessageItem } from '@/types/models';
 import ComposerImageUpload from './ComposerImageUpload';
@@ -45,6 +46,7 @@ function formatDateGroup(iso: string): string {
 
 export default function MessagesView() {
   const { currentUser } = useUserStore();
+  const { setHasUnread: setMessagesUnread } = useMessagesUnreadStore();
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loadingConvos, setLoadingConvos] = useState(true);
   const [selectedHandle, setSelectedHandle] = useState<string | null>(null);
@@ -70,11 +72,14 @@ export default function MessagesView() {
       if (res.ok) {
         const list = (await res.json()) as ConversationSummary[];
         setConversations(list);
+        setMessagesUnread(list.some((c) => c.hasUnread));
       } else {
         setConversations([]);
+        setMessagesUnread(false);
       }
     } catch {
       setConversations([]);
+      setMessagesUnread(false);
     } finally {
       setLoadingConvos(false);
     }
