@@ -79,3 +79,16 @@ export interface ConversationSummary {
     createdAt: string;
   } | null;
 }
+
+/** 通知一則（按讚/轉發/回覆/追蹤） */
+export type NotificationType = 'like' | 'repost' | 'reply' | 'follow';
+
+export interface NotificationItem {
+  id: string;
+  type: NotificationType;
+  actor: Author;
+  postId?: string;
+  commentId?: string;
+  createdAt: string;
+  isUnread: boolean;
+}

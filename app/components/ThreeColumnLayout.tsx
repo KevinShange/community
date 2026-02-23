@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useUserStore } from '@/store/useUserStore';
 import { useMessagesUnreadStore } from '@/store/useMessagesUnreadStore';
+import { useNotificationsUnreadStore } from '@/store/useNotificationsUnreadStore';
 import PostModal from '@/app/components/PostModal';
 import type { ConversationSummary } from '@/types/models';
 
@@ -20,7 +21,9 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
   const pathname = usePathname();
   const { currentUser } = useUserStore();
   const { hasUnread: hasMessagesUnread, setHasUnread: setMessagesUnread } = useMessagesUnreadStore();
+  const { hasUnread: hasNotificationsUnread, setHasUnread: setNotificationsUnread } = useNotificationsUnreadStore();
   const isProfile = pathname === '/profile';
+  const isNotificationsPage = pathname === '/notifications';
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [postModalOpen, setPostModalOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -146,6 +149,34 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
     return () => window.removeEventListener('focus', handleFocus);
   }, [currentUser?.handle, pathname, setMessagesUnread]);
 
+  // 左欄 Notifications 未讀小圓點：登入後拉一次 has-unread，不進頁面也會顯示
+  useEffect(() => {
+    if (!currentUser?.handle) return;
+    const headers = { 'x-user-handle': currentUser.handle };
+    fetch('/api/notifications/has-unread', { headers })
+      .then((res) => (res.ok ? res.json() : { hasUnread: false }))
+      .then((data: { hasUnread?: boolean }) => {
+        setNotificationsUnread(Boolean(data.hasUnread));
+      })
+      .catch(() => setNotificationsUnread(false));
+  }, [currentUser?.handle, setNotificationsUnread]);
+
+  // 視窗 focus 時若不在 Notifications 頁，重拉 has-unread 以更新小圓點
+  useEffect(() => {
+    function handleFocus() {
+      if (!currentUser?.handle || pathname === '/notifications') return;
+      const headers = { 'x-user-handle': currentUser.handle };
+      fetch('/api/notifications/has-unread', { headers })
+        .then((res) => (res.ok ? res.json() : { hasUnread: false }))
+        .then((data: { hasUnread?: boolean }) => {
+          setNotificationsUnread(Boolean(data.hasUnread));
+        })
+        .catch(() => setNotificationsUnread(false));
+    }
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [currentUser?.handle, pathname, setNotificationsUnread]);
+
   const navLinkClass = (active: boolean) =>
     `flex items-center rounded-full transition-colors group relative overflow-hidden ${
       sidebarCollapsed ? 'justify-center p-3' : 'gap-4 px-4 py-3'
@@ -203,16 +234,24 @@ export default function ThreeColumnLayout({ children }: ThreeColumnLayoutProps) 
                 {!sidebarCollapsed && <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl whitespace-nowrap">Explore</span>}
               </Link>
               
-              <Link href="/notifications" className={navLinkClass(false)}>
-                <svg
-                  className="w-6 h-6 flex-shrink-0 text-gray-400 group-hover:text-blue-500 transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {!sidebarCollapsed && <span className="text-gray-400 group-hover:text-blue-500 transition-colors text-xl whitespace-nowrap">Notifications</span>}
+              <Link href="/notifications" className={navLinkClass(isNotificationsPage)}>
+                <div className="relative flex-shrink-0">
+                  <svg
+                    className={`w-6 h-6 flex-shrink-0 ${isNotificationsPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {hasNotificationsUnread && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-blue-500 border-2 border-gray-950"
+                      aria-hidden
+                    />
+                  )}
+                </div>
+                {!sidebarCollapsed && <span className={`text-xl whitespace-nowrap ${isNotificationsPage ? 'text-blue-500' : 'text-gray-400 group-hover:text-blue-500 transition-colors'}`}>Notifications</span>}
               </Link>
               
               <Link href="/messages" className={navLinkClass(isMessagesPage)}>

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createNotification } from '@/lib/notificationService';
 
 type IncomingAuthor = {
   name: string;
@@ -59,6 +60,14 @@ export async function PUT(
       return NextResponse.json({ retweeted: false });
     }
 
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true },
+    });
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
     await prisma.$transaction([
       prisma.postRetweet.create({
         data: { post: { connect: { id: postId } }, user: { connect: { id: user.id } } },
@@ -68,6 +77,12 @@ export async function PUT(
         data: { retweetCount: { increment: 1 } },
       }),
     ]);
+    await createNotification(prisma, {
+      type: 'repost',
+      actorId: user.id,
+      targetUserId: post.authorId,
+      postId,
+    });
 
     return NextResponse.json({ retweeted: true });
   } catch (error) {

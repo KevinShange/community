@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { triggerPusher } from '@/lib/pusher';
+import { createNotification } from '@/lib/notificationService';
 
 type IncomingAuthor = {
   name: string;
@@ -69,6 +70,14 @@ export async function PUT(
       return NextResponse.json({ liked: false, likeCount: updated?.likeCount ?? 0 });
     }
 
+    const post = await prisma.post.findUnique({
+      where: { id: postId },
+      select: { authorId: true, likeCount: true },
+    });
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
     await prisma.$transaction([
       prisma.postLike.create({
         data: { post: { connect: { id: postId } }, user: { connect: { id: user.id } } },
@@ -78,6 +87,12 @@ export async function PUT(
         data: { likeCount: { increment: 1 } },
       }),
     ]);
+    await createNotification(prisma, {
+      type: 'like',
+      actorId: user.id,
+      targetUserId: post.authorId,
+      postId,
+    });
     const updated = await prisma.post.findUnique({
       where: { id: postId },
       select: { likeCount: true },

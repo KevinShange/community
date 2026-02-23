@@ -1,5 +1,5 @@
-import UnimplementedPage from '@/app/components/UnimplementedPage';
+import NotificationsView from '@/app/components/NotificationsView';
 
 export default function NotificationsPage() {
-  return <UnimplementedPage />;
+  return <NotificationsView />;
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createNotification } from '@/lib/notificationService';
 
 type IncomingAuthor = {
   name: string;
@@ -80,6 +81,11 @@ export async function POST(req: Request) {
         },
       });
       isFollowing = true;
+      await createNotification(prisma, {
+        type: 'follow',
+        actorId: viewer.id,
+        targetUserId: target.id,
+      });
     }
 
     const [followingCount, followersCount] = await Promise.all([

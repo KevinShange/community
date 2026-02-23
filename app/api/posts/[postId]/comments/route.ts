@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { createNotification } from '@/lib/notificationService';
 import type { Post } from '@/types/models';
 import { createReplySchema } from '@/lib/schemas';
 
@@ -57,13 +58,14 @@ export async function POST(
 
     const user = await getOrCreateUser(author);
 
-    await prisma.comment.create({
+    const createdComment = await prisma.comment.create({
       data: {
         post: { connect: { id: postId } },
         author: { connect: { id: user.id } },
         content,
         imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
       },
+      select: { id: true },
     });
 
     const post = await prisma.post.findUnique({
@@ -80,6 +82,14 @@ export async function POST(
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
+
+    await createNotification(prisma, {
+      type: 'reply',
+      actorId: user.id,
+      targetUserId: post.authorId,
+      postId,
+      commentId: createdComment.id,
+    });
 
     const postImageUrls: string[] = Array.isArray(post.imageUrls)
       ? post.imageUrls.filter((u): u is string => typeof u === 'string')

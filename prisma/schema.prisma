@@ -42,6 +42,14 @@ model User {
   /** 我讀過與某人的對話的已讀時間（用於未讀圓點） */
   conversationReadsAsReader  ConversationRead[] @relation("ConversationReadAsReader")
   conversationReadsAsPartner  ConversationRead[] @relation("ConversationReadAsPartner")
+
+  /** 通知最後已讀時間（進入 Notifications 頁時更新，用於左欄未讀小圓點） */
+  notificationsReadAt DateTime?
+
+  /** 發給我的通知（按讚/轉發/回覆/追蹤） */
+  notificationsReceived Notification[] @relation("NotificationsReceived")
+  /** 我觸發的通知（作為 actor） */
+  notificationsSent Notification[] @relation("NotificationActor")
 }
 
 model DirectMessage {
@@ -96,9 +104,10 @@ model Post {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  comments  Comment[]
-  likes     PostLike[]
-  retweets  PostRetweet[]
+  comments     Comment[]
+  likes        PostLike[]
+  retweets     PostRetweet[]
+  notifications Notification[]
 
   @@index([authorId])
   @@index([createdAt])
@@ -116,7 +125,8 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  likes CommentLike[]
+  likes       CommentLike[]
+  notifications Notification[]
 
   @@index([postId])
   @@index([authorId])
@@ -184,4 +194,22 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+/** 通知：按讚 / 轉發 / 回覆 / 追蹤（方案 B 寫入此表，列表與未讀皆由此查） */
+model Notification {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  type         String   // like | repost | reply | follow
+  actorId      String   @db.ObjectId
+  actor        User     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  targetUserId String   @db.ObjectId
+  targetUser   User     @relation("NotificationsReceived", fields: [targetUserId], references: [id], onDelete: Cascade)
+  postId       String?  @db.ObjectId
+  post         Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId    String?  @db.ObjectId
+  comment      Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@index([targetUserId])
+  @@index([createdAt])
 }
